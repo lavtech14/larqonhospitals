@@ -1,5 +1,6 @@
 import Link from "next/link";
 import StaffNavigation from "./StaffNavigation";
+import StaffProfile from "./StaffProfile";
 
 export default function Sidebar() {
   return (
@@ -15,7 +16,7 @@ export default function Sidebar() {
         </span>
       </Link>
 
-      <p className="sidebar-label">RECEPTION WORKSPACE</p>
+      <p className="sidebar-label">STAFF WORKSPACE</p>
 
       <nav aria-label="Main navigation">
         <StaffNavigation />
@@ -26,16 +27,7 @@ export default function Sidebar() {
         <p>Patients, appointments, laboratory and pharmacy are coming next.</p>
       </div>
 
-      <div className="profile">
-        <span className="avatar" aria-hidden="true">
-          RS
-        </span>
-
-        <div>
-          <strong>Reception Staff</strong>
-          <small>Demo account</small>
-        </div>
-      </div>
+      <StaffProfile />
     </aside>
   );
 }

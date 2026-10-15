@@ -543,3 +543,155 @@ input:focus-visible {
 .brand-icon {
   flex-shrink: 0;
 }
+
+.auth-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+  background:
+    radial-gradient(circle at top left, #dff2ef, transparent 55%), #f5f8fa;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 470px;
+  padding: 38px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: 0 18px 60px rgb(22 50 70 / 7%);
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 38px;
+}
+
+.auth-brand strong {
+  font-size: 21px;
+}
+
+.auth-brand .muted {
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+.auth-fields {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  padding: 0;
+  margin: 24px 0 0;
+  border: 0;
+}
+
+.auth-submit {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.auth-fields:disabled {
+  opacity: 0.7;
+}
+
+.auth-fields:disabled button {
+  cursor: wait;
+}
+
+.auth-footer {
+  margin-top: 26px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 28px 22px;
+  }
+
+  .auth-brand strong {
+    font-size: 19px;
+  }
+}
+.session-screen {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.session-card {
+  width: 100%;
+  max-width: 480px;
+  padding: 30px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  text-align: center;
+}
+
+.session-card h1 {
+  font-size: 24px;
+}
+
+.session-card button {
+  margin-top: 22px;
+}
+
+.staff-topbar {
+  flex-wrap: wrap;
+}
+
+.header-account {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.header-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: right;
+}
+
+.header-identity strong {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.header-identity span {
+  font-size: 11px;
+}
+
+.header-error {
+  width: 100%;
+  color: #a12626;
+  font-size: 13px;
+}
+
+.profile-details {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.secondary-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+@media (max-width: 760px) {
+  .header-account {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .header-identity {
+    text-align: left;
+  }
+}

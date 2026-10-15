@@ -1,9 +1,9 @@
 generator client {
-  provider            = "prisma-client"
-  output              = "../src/generated/prisma"
-  moduleFormat        = "esm"
+  provider               = "prisma-client"
+  output                 = "../src/generated/prisma"
+  moduleFormat           = "esm"
   generatedFileExtension = "ts"
-  importFileExtension = "js"
+  importFileExtension    = "js"
 }
 
 datasource db {
@@ -11,12 +11,93 @@ datasource db {
 }
 
 model Patient {
-  id        String   @id @default(uuid()) @db.Uuid
-  fullName  String   @db.VarChar(100)
-  phone     String?  @db.VarChar(20)
+  id       String  @id @default(uuid()) @db.Uuid
+  fullName String  @db.VarChar(100)
+  phone    String? @db.VarChar(20)
+
+  addressLine1 String? @db.VarChar(200)
+  addressLine2 String? @db.VarChar(200)
+  city         String? @db.VarChar(100)
+  district     String? @db.VarChar(100)
+  state        String? @db.VarChar(100)
+  postalCode   String? @db.VarChar(20)
+  countryCode  String? @db.Char(2)
+
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
   @@index([fullName])
   @@index([phone])
+}
+
+enum StaffRole {
+  ADMIN
+  RECEPTIONIST
+  DOCTOR
+  NURSE
+  LAB_TECHNICIAN
+  LAB_REVIEWER
+  PHARMACIST
+  BILLING
+}
+
+model StaffUser {
+  id                 String    @id @default(uuid()) @db.Uuid
+  email              String    @unique @db.VarChar(254)
+  fullName           String    @db.VarChar(100)
+  addressLine1       String?   @db.VarChar(200)
+  addressLine2       String?   @db.VarChar(200)
+  city               String?   @db.VarChar(100)
+  district           String?   @db.VarChar(100)
+  state              String?   @db.VarChar(100)
+  postalCode         String?   @db.VarChar(20)
+  countryCode        String?   @db.Char(2)
+  passwordHash       String
+  isActive           Boolean   @default(true)
+  mustChangePassword Boolean   @default(true)
+  passwordChangedAt  DateTime? @db.Timestamptz(3)
+  createdAt          DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @db.Timestamptz(3)
+
+  roles    StaffUserRole[]
+  sessions StaffSession[]
+}
+
+model StaffUserRole {
+  staffUserId String    @db.Uuid
+  role        StaffRole
+  assignedAt  DateTime  @default(now()) @db.Timestamptz(3)
+
+  staffUser StaffUser @relation(fields: [staffUserId], references: [id], onDelete: Restrict)
+
+  @@id([staffUserId, role])
+}
+
+model StaffSession {
+  id          String    @id @default(uuid()) @db.Uuid
+  staffUserId String    @db.Uuid
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  expiresAt   DateTime  @db.Timestamptz(3)
+  revokedAt   DateTime? @db.Timestamptz(3)
+
+  staffUser StaffUser @relation(fields: [staffUserId], references: [id], onDelete: Restrict)
+
+  refreshTokens StaffRefreshToken[]
+
+  @@index([staffUserId])
+  @@index([expiresAt])
+}
+
+model StaffRefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  sessionId String    @db.Uuid
+  tokenHash String    @unique @db.VarChar(64)
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  expiresAt DateTime  @db.Timestamptz(3)
+  usedAt    DateTime? @db.Timestamptz(3)
+
+  session StaffSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([expiresAt])
 }
