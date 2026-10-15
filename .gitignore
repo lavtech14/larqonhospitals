@@ -8,3 +8,4 @@ coverage/
 *.log
 uploads/
 backups/
+/apps/api/src/generated/prisma/
