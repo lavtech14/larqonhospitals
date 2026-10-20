@@ -5,9 +5,18 @@ import cookieParser from 'cookie-parser';
 import { rateLimit } from 'express-rate-limit';
 import type { NextFunction, Request, Response } from 'express';
 import { AppModule } from './app.module.js';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  const proxyHops = Number(process.env.TRUST_PROXY_HOPS ?? 0);
+
+  if (!Number.isInteger(proxyHops) || proxyHops < 0 || proxyHops > 10) {
+    throw new Error('TRUST_PROXY_HOPS must be an integer from 0 to 10.');
+  }
+
+  app.set('trust proxy', proxyHops);
 
   const frontendOrigin = process.env.FRONTEND_ORIGIN ?? 'http://localhost:3000';
 

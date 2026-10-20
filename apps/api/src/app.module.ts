@@ -12,6 +12,7 @@ import { StaffModule } from './staff/staff.module.js';
 import { PatientAccountsModule } from './patient-accounts/patient-accounts.module.js';
 import { PatientAuthModule } from './patient-auth/patient-auth.module.js';
 import { PatientPortalModule } from './patient-portal/patient-portal.module.js';
+import { HealthController } from './health.controller.js';
 
 @Module({
   imports: [
@@ -27,7 +28,7 @@ import { PatientPortalModule } from './patient-portal/patient-portal.module.js';
     PatientAuthModule,
     PatientPortalModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, HealthController],
   providers: [AppService],
 })
 export class AppModule {}

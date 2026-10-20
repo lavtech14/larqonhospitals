@@ -26,11 +26,9 @@ export class DatabaseService
   async onModuleInit() {
     await this.$connect();
 
-    const patientCount = await this.patient.count();
+    await this.$queryRaw`SELECT 1`;
 
-    this.logger.log(
-      `PostgreSQL connected. Development patient count: ${patientCount}`,
-    );
+    this.logger.log('PostgreSQL connected.');
   }
 
   async onModuleDestroy() {
