@@ -546,7 +546,6 @@ export class AppointmentsService {
             id: true,
             displayName: true,
             isActive: true,
-            mode: true,
             department: {
               select: {
                 isActive: true,
@@ -590,6 +589,7 @@ export class AppointmentsService {
             startsAt: true,
             endsAt: true,
             status: true,
+            mode: true,
             version: true,
             patient: {
               select: {
