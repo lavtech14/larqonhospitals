@@ -12,6 +12,12 @@ import {
   PUBLIC_ROUTE,
 } from './auth.decorators.js';
 import type { StaffRequest } from './auth.decorators.js';
+import {
+  AUTHENTICATED_ONLY,
+  REQUIRED_PERMISSIONS,
+  permissionsForRoles,
+} from './permissions.js';
+import type { Permission } from './permissions.js';
 
 @Injectable()
 export class AccessGuard implements CanActivate {
@@ -91,6 +97,38 @@ export class AccessGuard implements CanActivate {
         mustChangePassword: user.mustChangePassword,
       },
     };
+    const requiredPermissions = this.reflector.getAllAndOverride<Permission[]>(
+      REQUIRED_PERMISSIONS,
+      targets,
+    );
+
+    if (requiredPermissions !== undefined) {
+      const granted = new Set(
+        permissionsForRoles(request.staffIdentity.user.roles),
+      );
+
+      if (
+        requiredPermissions.length === 0 ||
+        !requiredPermissions.every((permission) => granted.has(permission))
+      ) {
+        throw new ForbiddenException({
+          code: 'PERMISSION_DENIED',
+          message: 'You do not have permission to perform this action.',
+        });
+      }
+    } else {
+      const authenticatedOnly = this.reflector.getAllAndOverride<boolean>(
+        AUTHENTICATED_ONLY,
+        targets,
+      );
+
+      if (!authenticatedOnly) {
+        throw new ForbiddenException({
+          code: 'ACCESS_RULE_MISSING',
+          message: 'Access to this endpoint has not been configured.',
+        });
+      }
+    }
 
     return true;
   }

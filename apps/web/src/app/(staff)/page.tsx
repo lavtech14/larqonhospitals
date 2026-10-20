@@ -1,3 +1,4 @@
+export const instant = false;
 import MetricCard from "@/components/dashboard/MetricCard";
 
 const metrics = [

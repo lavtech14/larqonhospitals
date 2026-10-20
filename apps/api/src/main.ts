@@ -50,6 +50,18 @@ async function bootstrap() {
       },
     }),
   );
+  app.use(
+    '/api/auth/refresh',
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      limit: 120,
+      standardHeaders: 'draft-8',
+      legacyHeaders: false,
+      message: {
+        message: 'Too many refresh attempts. Try again later.',
+      },
+    }),
+  );
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -63,9 +75,17 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(3001, '127.0.0.1');
+  const port = Number(process.env.PORT ?? 3001);
 
-  console.log('Larqon Hospitals API: http://localhost:3001/api');
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error('PORT must be a valid port number.');
+  }
+
+  const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
+
+  await app.listen(port, host);
+
+  console.log(`Larqon Hospitals API: ${await app.getUrl()}/api`);
 }
 
 void bootstrap();

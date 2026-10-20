@@ -8,7 +8,9 @@ import {
   Post,
   Res,
 } from '@nestjs/common';
-import type { CookieOptions, Response } from 'express';
+import type { Response } from 'express';
+import { clearAuthCookies, setAuthCookies } from './auth.cookies.js';
+
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './login.dto.js';
 import { ChangePasswordDto } from './change-password.dto.js';
@@ -18,15 +20,7 @@ import {
   Public,
 } from './auth.decorators.js';
 import type { CurrentStaffIdentity } from './auth.decorators.js';
-
-function accessCookieOptions(): CookieOptions {
-  return {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    path: '/api',
-  };
-}
+import { AuthenticatedOnly, permissionsForRoles } from './permissions.js';
 
 @Controller('auth')
 export class AuthController {
@@ -42,21 +36,24 @@ export class AuthController {
   ) {
     const result = await this.auth.login(body.email, body.password);
 
-    response.cookie('larqon_access', result.accessToken, {
-      ...accessCookieOptions(),
-      maxAge: 15 * 60 * 1000,
-    });
+    setAuthCookies(response, result);
 
     return { user: result.user };
   }
-
+  @AuthenticatedOnly()
   @AllowPasswordChangePending()
   @Get('me')
   @Header('Cache-Control', 'no-store')
   me(@CurrentStaff() identity: CurrentStaffIdentity) {
-    return { user: identity.user };
+    return {
+      user: {
+        ...identity.user,
+        permissions: permissionsForRoles(identity.user.roles),
+      },
+    };
   }
 
+  @AuthenticatedOnly()
   @AllowPasswordChangePending()
   @Post('logout')
   @HttpCode(HttpStatus.OK)
@@ -67,11 +64,12 @@ export class AuthController {
   ) {
     await this.auth.logout(identity.user.id, identity.sessionId);
 
-    response.clearCookie('larqon_access', accessCookieOptions());
+    clearAuthCookies(response);
 
     return { message: 'Logged out successfully.' };
   }
 
+  @AuthenticatedOnly()
   @AllowPasswordChangePending()
   @Post('change-password')
   @HttpCode(HttpStatus.OK)
@@ -88,7 +86,7 @@ export class AuthController {
       body.newPassword,
     );
 
-    response.clearCookie('larqon_access', accessCookieOptions());
+    clearAuthCookies(response);
 
     return {
       message: 'Password changed. Log in again with your new password.',

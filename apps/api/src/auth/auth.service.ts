@@ -8,6 +8,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { createRefreshToken, hashRefreshToken } from './refresh-token.js';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -44,7 +45,6 @@ export class AuthService implements OnModuleInit {
     }
 
     return this.database.$transaction(async (tx) => {
-      // Recheck account status and credentials before issuing a session.
       const current = await tx.staffUser.findUnique({
         where: { id: user.id },
         select: {
@@ -68,10 +68,20 @@ export class AuthService implements OnModuleInit {
         throw new UnauthorizedException('Invalid email or password.');
       }
 
+      const sessionExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+      const refreshToken = createRefreshToken();
+
       const session = await tx.staffSession.create({
         data: {
           staffUserId: current.id,
-          expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+          expiresAt: sessionExpiresAt,
+          refreshTokens: {
+            create: {
+              tokenHash: hashRefreshToken(refreshToken),
+              expiresAt: sessionExpiresAt,
+            },
+          },
         },
         select: { id: true },
       });
@@ -83,6 +93,8 @@ export class AuthService implements OnModuleInit {
 
       return {
         accessToken,
+        refreshToken,
+        sessionExpiresAt,
         user: {
           id: current.id,
           email: current.email,

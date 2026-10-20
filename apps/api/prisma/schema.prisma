@@ -23,8 +23,26 @@ model Patient {
   postalCode   String? @db.VarChar(20)
   countryCode  String? @db.Char(2)
 
-  createdAt DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  createdAt            DateTime                     @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime                     @updatedAt @db.Timestamptz(3)
+  version              Int                          @default(1)
+  registrationRequests PatientRegistrationRequest[]
+  appointments         Appointment[]
+  account              PatientAccount?
+  mrn                  String                       @unique @default(dbgenerated("larqon_next_patient_mrn()")) @db.VarChar(30)
+  dateOfBirth          DateTime?                    @db.Date
+  administrativeSex    AdministrativeSex            @default(UNKNOWN)
+  phoneOwner           PatientPhoneOwner            @default(UNKNOWN)
+  phoneContactName     String?                      @db.VarChar(100)
+  contactEmail         String?                      @db.VarChar(254)
+
+  guardianName         String? @db.VarChar(100)
+  guardianRelationship String? @db.VarChar(50)
+  guardianPhone        String? @db.VarChar(20)
+
+  emergencyContactName         String? @db.VarChar(100)
+  emergencyContactRelationship String? @db.VarChar(50)
+  emergencyContactPhone        String? @db.VarChar(20)
 
   @@index([fullName])
   @@index([phone])
@@ -59,8 +77,15 @@ model StaffUser {
   createdAt          DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt          DateTime  @updatedAt @db.Timestamptz(3)
 
-  roles    StaffUserRole[]
-  sessions StaffSession[]
+  roles                  StaffUserRole[]
+  sessions               StaffSession[]
+  auditEvents            AuditEvent[]
+  registrationRequests   PatientRegistrationRequest[]
+  doctorProfile          DoctorProfile?
+  createdAppointments    Appointment[]                @relation("AppointmentCreator")
+  cancelledAppointments  Appointment[]                @relation("AppointmentCanceller")
+  bookingRequests        AppointmentBookingRequest[]
+  createdPatientAccounts PatientAccount[]
 }
 
 model StaffUserRole {
@@ -100,4 +125,236 @@ model StaffRefreshToken {
 
   @@index([sessionId])
   @@index([expiresAt])
+}
+
+model AuditEvent {
+  id           String   @id @default(uuid()) @db.Uuid
+  actorStaffId String   @db.Uuid
+  action       String   @db.VarChar(100)
+  resourceType String   @db.VarChar(50)
+  resourceId   String   @db.Uuid
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+
+  actor StaffUser @relation(fields: [actorStaffId], references: [id], onDelete: Restrict)
+
+  @@index([actorStaffId, createdAt])
+  @@index([resourceType, resourceId])
+}
+
+model PatientRegistrationRequest {
+  actorStaffId String   @db.Uuid
+  key          String   @db.Uuid
+  requestHash  String   @db.VarChar(64)
+  patientId    String   @db.Uuid
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+
+  actor   StaffUser @relation(fields: [actorStaffId], references: [id], onDelete: Restrict)
+  patient Patient   @relation(fields: [patientId], references: [id], onDelete: Restrict)
+
+  @@id([actorStaffId, key])
+  @@index([patientId])
+}
+
+model Department {
+  id        String          @id @default(uuid()) @db.Uuid
+  code      String          @unique @db.VarChar(20)
+  name      String          @db.VarChar(100)
+  isActive  Boolean         @default(true)
+  version   Int             @default(1)
+  createdAt DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime        @updatedAt @db.Timestamptz(3)
+  doctors   DoctorProfile[]
+}
+
+model DoctorProfile {
+  id                    String  @id @default(uuid()) @db.Uuid
+  displayName           String  @db.VarChar(100)
+  specialty             String  @db.VarChar(100)
+  qualification         String? @db.VarChar(200)
+  registrationNumber    String? @db.VarChar(100)
+  registrationAuthority String? @db.VarChar(100)
+
+  departmentId String  @db.Uuid
+  staffUserId  String? @unique @db.Uuid
+
+  isActive  Boolean  @default(true)
+  version   Int      @default(1)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  department   Department          @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  staffUser    StaffUser?          @relation(fields: [staffUserId], references: [id], onDelete: Restrict)
+  availability DoctorAvailability?
+  dateClosures DoctorDateClosure[]
+  appointments Appointment[]
+
+  @@index([departmentId, isActive])
+}
+
+model DoctorAvailability {
+  doctorId  String   @id @db.Uuid
+  timeZone  String   @default("Asia/Kolkata") @db.VarChar(50)
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  doctor  DoctorProfile              @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+  windows DoctorAvailabilityWindow[]
+}
+
+model DoctorAvailabilityWindow {
+  id          String @id @default(uuid()) @db.Uuid
+  doctorId    String @db.Uuid
+  dayOfWeek   Int
+  startMinute Int
+  endMinute   Int
+  slotMinutes Int
+
+  availability DoctorAvailability        @relation(fields: [doctorId], references: [doctorId], onDelete: Cascade)
+  breaks       DoctorAvailabilityBreak[]
+
+  @@index([doctorId, dayOfWeek, startMinute])
+}
+
+model DoctorAvailabilityBreak {
+  id          String @id @default(uuid()) @db.Uuid
+  windowId    String @db.Uuid
+  startMinute Int
+  endMinute   Int
+
+  window DoctorAvailabilityWindow @relation(fields: [windowId], references: [id], onDelete: Cascade)
+
+  @@index([windowId])
+}
+
+model DoctorDateClosure {
+  id        String   @id @default(uuid()) @db.Uuid
+  doctorId  String   @db.Uuid
+  date      DateTime @db.Date
+  isClosed  Boolean  @default(true)
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  doctor DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+
+  @@unique([doctorId, date])
+}
+
+model HospitalDateClosure {
+  id        String   @id @default(uuid()) @db.Uuid
+  date      DateTime @unique @db.Date
+  isClosed  Boolean  @default(true)
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+enum AppointmentStatus {
+  BOOKED
+  CANCELLED
+}
+
+model Appointment {
+  id               String            @id @default(uuid()) @db.Uuid
+  patientId        String            @db.Uuid
+  doctorId         String            @db.Uuid
+  createdByStaffId String            @db.Uuid
+  startsAt         DateTime          @db.Timestamptz(3)
+  endsAt           DateTime          @db.Timestamptz(3)
+  status           AppointmentStatus @default(BOOKED)
+  version          Int               @default(1)
+  createdAt        DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime          @updatedAt @db.Timestamptz(3)
+
+  cancelledAt        DateTime? @db.Timestamptz(3)
+  cancelledByStaffId String?   @db.Uuid
+
+  patient     Patient       @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  doctor      DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+  createdBy   StaffUser     @relation("AppointmentCreator", fields: [createdByStaffId], references: [id], onDelete: Restrict)
+  cancelledBy StaffUser?    @relation("AppointmentCanceller", fields: [cancelledByStaffId], references: [id], onDelete: Restrict)
+
+  bookingRequests AppointmentBookingRequest[]
+  mode            AppointmentMode             @default(IN_PERSON)
+
+  @@index([doctorId, startsAt])
+  @@index([patientId, startsAt])
+  @@index([status, startsAt])
+}
+
+model AppointmentBookingRequest {
+  actorStaffId  String   @db.Uuid
+  key           String   @db.Uuid
+  requestHash   String   @db.VarChar(64)
+  appointmentId String   @db.Uuid
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+
+  actor       StaffUser   @relation(fields: [actorStaffId], references: [id], onDelete: Restrict)
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Restrict)
+
+  @@id([actorStaffId, key])
+  @@index([appointmentId])
+}
+
+enum AppointmentMode {
+  IN_PERSON
+  ONLINE
+}
+
+model PatientAccount {
+  id                 String    @id @default(uuid()) @db.Uuid
+  patientId          String    @unique @db.Uuid
+  email              String    @unique @db.VarChar(254)
+  passwordHash       String
+  isActive           Boolean   @default(true)
+  mustChangePassword Boolean   @default(true)
+  passwordChangedAt  DateTime? @db.Timestamptz(3)
+  createdByStaffId   String    @db.Uuid
+  version            Int       @default(1)
+  createdAt          DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @db.Timestamptz(3)
+
+  patient   Patient          @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  createdBy StaffUser        @relation(fields: [createdByStaffId], references: [id], onDelete: Restrict)
+  sessions  PatientSession[]
+}
+
+model PatientSession {
+  id               String    @id @default(uuid()) @db.Uuid
+  patientAccountId String    @db.Uuid
+  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
+  expiresAt        DateTime  @db.Timestamptz(3)
+  revokedAt        DateTime? @db.Timestamptz(3)
+
+  account       PatientAccount        @relation(fields: [patientAccountId], references: [id], onDelete: Restrict)
+  refreshTokens PatientRefreshToken[]
+
+  @@index([patientAccountId])
+  @@index([expiresAt])
+}
+
+model PatientRefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  sessionId String    @db.Uuid
+  tokenHash String    @unique @db.VarChar(64)
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  expiresAt DateTime  @db.Timestamptz(3)
+  usedAt    DateTime? @db.Timestamptz(3)
+
+  session PatientSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([expiresAt])
+}
+
+enum AdministrativeSex {
+  MALE
+  FEMALE
+  OTHER
+  UNKNOWN
+}
+
+enum PatientPhoneOwner {
+  PATIENT
+  GUARDIAN
+  OTHER
+  UNKNOWN
 }

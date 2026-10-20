@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Patient" ADD COLUMN     "version" INTEGER NOT NULL DEFAULT 1;
