@@ -150,10 +150,9 @@ export default function PatientPortalAccount({
       setAccount(response.account);
       setChecked(true);
 
-      <p className="preview-note">
-        Patient sign-in is available at /patient/login. Online consultation
-        joining is not enabled yet.
-      </p>;
+      setNotice(
+        "Portal account created. The patient must change the temporary password at first sign-in.",
+      );
     } catch (error) {
       setChecked(false);
       setVersionConflict(isPatientVersionConflict(error));
@@ -170,155 +169,219 @@ export default function PatientPortalAccount({
     }
   }
 
+  const primaryButton =
+    "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-teal-800 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50";
+  const secondaryButton =
+    "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50";
+  const inputClass =
+    "mt-2 block min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-normal text-slate-900 focus:border-teal-700 focus:outline-2 focus:outline-offset-2 focus:outline-teal-700 disabled:bg-slate-50 disabled:opacity-60";
+
   if (!allowed) return null;
 
   return (
     <section
-      className="panel patient-portal-panel"
       aria-labelledby="patient-portal-title"
       aria-busy={busy}
+      className="overflow-hidden rounded-2xl border border-slate-200 bg-white"
     >
-      <div className="panel-heading">
-        <div>
-          <p className="eyebrow">Patient portal</p>
-          <h2 id="patient-portal-title">Portal account</h2>
-          <p className="muted">Optional login account for {patientName}.</p>
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 p-5 sm:p-6">
+        <div className="min-w-0">
+          <p className="text-[10px] font-bold tracking-[0.16em] text-teal-800">
+            PATIENT PORTAL
+          </p>
+          <h2
+            id="patient-portal-title"
+            className="mt-2 text-lg font-semibold tracking-tight text-slate-950"
+          >
+            Portal account
+          </h2>
+          <p className="mt-2 break-words text-sm leading-6 text-slate-500">
+            Optional sign-in access for {patientName}.
+          </p>
         </div>
-
         <button
           type="button"
-          className="secondary-button"
+          className={secondaryButton}
           disabled={busy}
           onClick={() => void checkAccount()}
         >
           {busy
-            ? "Please wait..."
+            ? "Please wait…"
             : checked
               ? "Refresh account status"
               : "Check account status"}
         </button>
       </div>
-
-      <div aria-live="polite">
+      <div className="space-y-5 p-5 sm:p-6">
         {error && (
-          <p className="form-error" role="alert">
+          <p
+            role="alert"
+            className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-800"
+          >
             {error}
           </p>
         )}
-        {notice && <p className="success-message">{notice}</p>}
-      </div>
-
-      {versionConflict && (
-        <div className="conflict-notice">
-          <p>
-            Reload the patient details and check their identity again before
-            creating an account.
-          </p>
-
-          <button
-            type="button"
-            className="secondary-button"
-            disabled={busy}
-            onClick={onReloadPatient}
+        {notice && (
+          <p
+            role="status"
+            className="rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-950"
           >
-            Reload patient details
-          </button>
-        </div>
-      )}
-
-      {!checked && !busy && !versionConflict && (
-        <p className="muted">
-          Check whether this patient already has a portal account.
-        </p>
-      )}
-
-      {checked && account && (
-        <dl className="patient-details-grid">
-          <div>
-            <dt>Login email</dt>
-            <dd>{account.email}</dd>
-          </div>
-          <div>
-            <dt>Account status</dt>
-            <dd>{account.isActive ? "Active" : "Inactive"}</dd>
-          </div>
-          <div>
-            <dt>Password status</dt>
-            <dd>
-              {account.mustChangePassword
-                ? "First-login password change required"
-                : "Initial password changed"}
-            </dd>
-          </div>
-        </dl>
-      )}
-
-      {checked && !account && !versionConflict && (
-        <form onSubmit={createAccount}>
-          <fieldset className="patient-fields" disabled={busy}>
-            <legend>Create patient portal account</legend>
-
-            <p>
-              Patient: <strong>{patientName}</strong>
-              {" · "}
-              MRN: <strong>{patientMrn}</strong>
+            {notice}
+          </p>
+        )}
+        {busy && (
+          <p role="status" className="text-sm text-slate-500">
+            Checking account request…
+          </p>
+        )}
+        {versionConflict && (
+          <div className="rounded-xl border border-amber-300 bg-amber-50 p-4">
+            <h3 className="text-sm font-semibold text-amber-950">
+              Verify the latest patient record
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-amber-900">
+              Reload the patient details and check their identity again before
+              creating an account.
             </p>
-
-            <div className="form-grid">
-              <label className="form-field">
-                <span>Portal login email *</span>
-                <input
-                  name="email"
-                  type="email"
-                  required
-                  maxLength={254}
-                  autoComplete="off"
-                />
-              </label>
-
-              <label className="form-field">
-                <span>Temporary password *</span>
-                <input
-                  name="temporaryPassword"
-                  type="password"
-                  required
-                  minLength={16}
-                  maxLength={128}
-                  autoComplete="new-password"
-                  aria-describedby="patient-portal-password-help"
-                />
-              </label>
-            </div>
-
-            <p id="patient-portal-password-help" className="muted">
-              Use 16–128 characters, matching the current account API. Share it
-              directly with the patient; no email is sent.
-            </p>
-
-            <label className="patient-portal-confirm">
-              <input name="identityConfirmed" type="checkbox" required />
-              <span>
-                I checked this patients identity and confirmed the login email
-                with them.
-              </span>
-            </label>
-
-            <p className="muted">
-              Contact details and guardian details do not automatically
-              authorize portal access.
-            </p>
-
-            <button type="submit" className="primary-button" disabled={busy}>
-              {busy ? "Creating account..." : "Create portal account"}
+            <button
+              type="button"
+              className={`${secondaryButton} mt-4`}
+              disabled={busy}
+              onClick={onReloadPatient}
+            >
+              Reload patient details
             </button>
-          </fieldset>
-        </form>
-      )}
-
-      <p className="preview-note">
-        Account provisioning is available. Patient sign-in and online
-        consultation joining are not enabled yet.
-      </p>
+          </div>
+        )}
+        {!checked && !busy && !versionConflict && (
+          <div className="rounded-xl border border-dashed border-slate-300 px-5 py-7">
+            <h3 className="text-sm font-semibold text-slate-900">
+              Check before creating an account
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Select Check account status to find out whether this patient
+              already has portal access.
+            </p>
+          </div>
+        )}
+        {checked && account && (
+          <div>
+            <div className="mb-5 flex items-center gap-2">
+              <span
+                className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${account.isActive ? "bg-teal-50 text-teal-900" : "bg-slate-100 text-slate-600"}`}
+              >
+                {account.isActive ? "Active account" : "Inactive account"}
+              </span>
+            </div>
+            <dl className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="min-w-0">
+                <dt className="text-xs text-slate-500">Login email</dt>
+                <dd className="mt-2 break-all text-sm font-medium text-slate-900">
+                  {account.email}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-500">Account status</dt>
+                <dd className="mt-2 text-sm font-medium text-slate-900">
+                  {account.isActive ? "Active" : "Inactive"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-500">Password status</dt>
+                <dd className="mt-2 text-sm font-medium leading-6 text-slate-900">
+                  {account.mustChangePassword
+                    ? "First-login password change required"
+                    : "Initial password changed"}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        )}
+        {checked && !account && !versionConflict && (
+          <form onSubmit={createAccount}>
+            <fieldset disabled={busy} className="m-0 min-w-0 border-0 p-0">
+              <legend className="text-base font-semibold text-slate-900">
+                Create patient portal account
+              </legend>
+              <p className="mt-3 break-words rounded-xl bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700">
+                <strong>{patientName}</strong>
+                <span className="ml-2 text-xs text-slate-500">
+                  MRN: {patientMrn}
+                </span>
+              </p>
+              <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                <label className="min-w-0 text-xs font-semibold text-slate-600">
+                  Portal login email{" "}
+                  <span aria-hidden="true" className="text-red-700">
+                    *
+                  </span>
+                  <input
+                    name="email"
+                    type="email"
+                    required
+                    maxLength={254}
+                    autoComplete="off"
+                    className={inputClass}
+                  />
+                </label>
+                <label className="min-w-0 text-xs font-semibold text-slate-600">
+                  Temporary password{" "}
+                  <span aria-hidden="true" className="text-red-700">
+                    *
+                  </span>
+                  <input
+                    name="temporaryPassword"
+                    type="password"
+                    required
+                    minLength={16}
+                    maxLength={128}
+                    autoComplete="new-password"
+                    aria-describedby="patient-portal-password-help"
+                    className={inputClass}
+                  />
+                </label>
+              </div>
+              <p
+                id="patient-portal-password-help"
+                className="mt-3 text-xs leading-5 text-slate-500"
+              >
+                Use 16–128 characters. Share the temporary password directly
+                with the patient; no email is sent. The patient must change it
+                at first sign-in.
+              </p>
+              <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-4 text-sm leading-6 text-slate-700">
+                <input
+                  name="identityConfirmed"
+                  type="checkbox"
+                  required
+                  className="mt-1 size-4 shrink-0 accent-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
+                />
+                <span>
+                  I checked this patient’s identity and confirmed the login
+                  email with them.
+                </span>
+              </label>
+              <p className="mt-3 text-xs leading-5 text-slate-500">
+                Contact details and guardian details do not automatically
+                authorize portal access.
+              </p>
+              <button
+                type="submit"
+                className={`${primaryButton} mt-5`}
+                disabled={busy}
+              >
+                {busy ? "Creating account…" : "Create portal account"}
+              </button>
+            </fieldset>
+          </form>
+        )}
+        <p className="border-t border-slate-100 pt-4 text-xs leading-5 text-slate-500">
+          Patient sign-in:{" "}
+          <span className="font-semibold text-slate-700">/patient/login</span>.
+          Assigned online appointments can be joined from the patient portal
+          during the allowed joining window.
+        </p>
+      </div>
     </section>
   );
 }

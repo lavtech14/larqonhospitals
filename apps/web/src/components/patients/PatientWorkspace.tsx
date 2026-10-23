@@ -321,11 +321,59 @@ export default function PatientWorkspace() {
     }
   }
 
+  const primaryButton =
+    "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-teal-800 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50";
+  const secondaryButton =
+    "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50";
+  const inputClass =
+    "mt-2 block min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:border-teal-700 focus:outline-2 focus:outline-offset-2 focus:outline-teal-700 disabled:cursor-wait disabled:bg-slate-50 disabled:opacity-60";
+
+  function renderField(name: string) {
+    const field = registrationFields.find((item) => item.name === name);
+    if (!field) return null;
+    return (
+      <div key={field.name} className="min-w-0">
+        <label
+          htmlFor={`patient-${field.name}`}
+          className="text-xs font-semibold text-slate-600"
+        >
+          {field.label}
+          {field.required && (
+            <span className="ml-1 text-red-700" aria-hidden="true">
+              *
+            </span>
+          )}
+        </label>
+        <input
+          id={`patient-${field.name}`}
+          name={field.name}
+          type={
+            field.name === "dateOfBirth"
+              ? "date"
+              : field.name === "contactEmail"
+                ? "email"
+                : field.name.toLowerCase().endsWith("phone")
+                  ? "tel"
+                  : "text"
+          }
+          autoComplete="off"
+          required={field.required}
+          minLength={field.name === "fullName" ? 2 : undefined}
+          maxLength={field.maxLength}
+          placeholder={field.name === "countryCode" ? "IN" : undefined}
+          className={inputClass}
+        />
+      </div>
+    );
+  }
+
   if (!canRead) {
     return (
-      <section className="panel registration-panel">
-        <h1>Patient directory access unavailable</h1>
-        <p className="muted">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
+        <h1 className="text-2xl font-bold text-slate-950">
+          Patient directory access unavailable
+        </h1>
+        <p className="mt-3 text-sm leading-6 text-slate-600">
           Your account does not have permission to view this directory.
         </p>
       </section>
@@ -333,20 +381,30 @@ export default function PatientWorkspace() {
   }
 
   return (
-    <>
-      <section className="page-heading" aria-labelledby="patients-title">
-        <div>
-          <p className="eyebrow">PATIENT MANAGEMENT</p>
-          <h1 id="patients-title">Patients</h1>
-          <p className="muted">
-            Search existing records before registering a patient.
+    <div className="min-w-0 space-y-6">
+      <header
+        className="flex flex-wrap items-end justify-between gap-5"
+        aria-labelledby="patients-title"
+      >
+        <div className="max-w-2xl">
+          <p className="text-[11px] font-bold tracking-[0.18em] text-teal-800">
+            PATIENT MANAGEMENT
+          </p>
+          <h1
+            id="patients-title"
+            className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl"
+          >
+            Patients
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            Find existing patient records or register a new patient. Search
+            before creating a record.
           </p>
         </div>
-
         {canCreate && (
           <button
-            className="primary-button"
             type="button"
+            className={showForm ? secondaryButton : primaryButton}
             disabled={saving}
             aria-expanded={showForm}
             aria-controls="registration-panel"
@@ -355,155 +413,298 @@ export default function PatientWorkspace() {
               setFormError("");
             }}
           >
-            {showForm ? "Close registration" : "+ Register patient"}
+            {!showForm && (
+              <span className="text-lg leading-none" aria-hidden="true">
+                +
+              </span>
+            )}
+            {showForm ? "Close registration" : "Register patient"}
           </button>
         )}
-      </section>
+      </header>
 
-      <p className="preview-note">
-        Development environment — use fictional patient information.
-      </p>
-
-      <p className="success-message" role="status">
-        {message}
-      </p>
+      {message && (
+        <p
+          role="status"
+          className="rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-950"
+        >
+          {message}
+        </p>
+      )}
 
       {showForm && canCreate && (
         <section
-          className="panel registration-panel"
           id="registration-panel"
           aria-labelledby="registration-title"
+          className="overflow-hidden rounded-2xl border border-slate-200 bg-white"
         >
-          <h2 id="registration-title">Register patient</h2>
-          <p className="muted">
-            Full name is required. Add contact and address details when
-            available.
-          </p>
-
-          <form onSubmit={registerPatient} aria-busy={saving}>
-            <fieldset className="patient-fields" disabled={saving}>
-              <legend className="sr-only">Patient registration details</legend>
-
-              <div
-                className="form-grid"
-                onChange={() => {
-                  setDuplicates(null);
-                  setDuplicateConfirmed(false);
-                  setFormError("");
-                }}
+          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 p-5 sm:p-6">
+            <div>
+              <p className="text-[10px] font-bold tracking-[0.16em] text-teal-800">
+                NEW PATIENT RECORD
+              </p>
+              <h2
+                id="registration-title"
+                className="mt-2 text-xl font-semibold tracking-tight text-slate-950"
               >
-                {registrationFields.map((field) => (
-                  <div className="form-field" key={field.name}>
-                    <label htmlFor={`patient-${field.name}`}>
-                      {field.label}
-                      {field.required ? " *" : ""}
-                    </label>
-
-                    <input
-                      id={`patient-${field.name}`}
-                      name={field.name}
-                      type={
-                        field.name === "dateOfBirth"
-                          ? "date"
-                          : field.name === "contactEmail"
-                            ? "email"
-                            : field.name.toLowerCase().endsWith("phone")
-                              ? "tel"
-                              : "text"
-                      }
-                      autoComplete="off"
-                      required={field.required}
-                      minLength={field.name === "fullName" ? 2 : undefined}
-                      maxLength={field.maxLength}
-                      placeholder={
-                        field.name === "countryCode" ? "IN" : undefined
-                      }
-                    />
-                  </div>
-                ))}
-                <div className="form-field">
-                  <label htmlFor="patient-phone-owner">
-                    Primary phone belongs to
-                  </label>
-
-                  <select
-                    id="patient-phone-owner"
-                    name="phoneOwner"
-                    defaultValue="UNKNOWN"
+                Register patient
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Full name is required. Record other details when they are known.
+              </p>
+            </div>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">
+              <span aria-hidden="true" className="text-red-700">
+                *
+              </span>{" "}
+              Required field
+            </span>
+          </div>
+          <form onSubmit={registerPatient} aria-busy={saving}>
+            <fieldset disabled={saving} className="m-0 min-w-0 border-0 p-0">
+              <legend className="sr-only">Patient registration details</legend>
+              <div className="grid min-w-0 gap-6 p-5 sm:p-6 xl:grid-cols-[minmax(0,1fr)_240px]">
+                <div
+                  className="min-w-0 space-y-7"
+                  onChange={() => {
+                    setDuplicates(null);
+                    setDuplicateConfirmed(false);
+                    setFormError("");
+                  }}
+                >
+                  <section aria-labelledby="identity-title">
+                    <h3
+                      id="identity-title"
+                      className="text-sm font-semibold text-slate-900"
+                    >
+                      1. Patient identity
+                    </h3>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      Use the patient’s full name. Leave unknown optional
+                      details unrecorded.
+                    </p>
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                      {renderField("fullName")}
+                      {renderField("dateOfBirth")}
+                      <div>
+                        <label
+                          htmlFor="patient-administrative-sex"
+                          className="text-xs font-semibold text-slate-600"
+                        >
+                          Administrative sex
+                        </label>
+                        <select
+                          id="patient-administrative-sex"
+                          name="administrativeSex"
+                          defaultValue="UNKNOWN"
+                          className={inputClass}
+                        >
+                          <option value="UNKNOWN">
+                            Unknown / not recorded
+                          </option>
+                          <option value="MALE">Male</option>
+                          <option value="FEMALE">Female</option>
+                          <option value="OTHER">Other</option>
+                        </select>
+                      </div>
+                    </div>
+                  </section>
+                  <section
+                    aria-labelledby="contact-title"
+                    className="border-t border-slate-100 pt-6"
                   >
-                    <option value="UNKNOWN">Unknown / not recorded</option>
-                    <option value="PATIENT">Patient</option>
-                    <option value="GUARDIAN">Guardian</option>
-                    <option value="OTHER">Other contact</option>
-                  </select>
-                </div>
-                <div className="form-field">
-                  <label htmlFor="patient-administrative-sex">
-                    Administrative sex
-                  </label>
-
-                  <select
-                    id="patient-administrative-sex"
-                    name="administrativeSex"
-                    defaultValue="UNKNOWN"
+                    <h3
+                      id="contact-title"
+                      className="text-sm font-semibold text-slate-900"
+                    >
+                      2. Contact information
+                    </h3>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      Record who owns the primary phone number.
+                    </p>
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                      {renderField("phone")}
+                      <div>
+                        <label
+                          htmlFor="patient-phone-owner"
+                          className="text-xs font-semibold text-slate-600"
+                        >
+                          Primary phone belongs to
+                        </label>
+                        <select
+                          id="patient-phone-owner"
+                          name="phoneOwner"
+                          defaultValue="UNKNOWN"
+                          className={inputClass}
+                        >
+                          <option value="UNKNOWN">
+                            Unknown / not recorded
+                          </option>
+                          <option value="PATIENT">Patient</option>
+                          <option value="GUARDIAN">Guardian</option>
+                          <option value="OTHER">Other contact</option>
+                        </select>
+                      </div>
+                      {renderField("phoneContactName")}
+                      {renderField("contactEmail")}
+                    </div>
+                  </section>
+                  <section
+                    aria-labelledby="address-title"
+                    className="border-t border-slate-100 pt-6"
                   >
-                    <option value="UNKNOWN">Unknown / not recorded</option>
-                    <option value="MALE">Male</option>
-                    <option value="FEMALE">Female</option>
-                    <option value="OTHER">Other</option>
-                  </select>
+                    <h3
+                      id="address-title"
+                      className="text-sm font-semibold text-slate-900"
+                    >
+                      3. Address
+                    </h3>
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                      {[
+                        "addressLine1",
+                        "addressLine2",
+                        "city",
+                        "district",
+                        "state",
+                        "postalCode",
+                        "countryCode",
+                      ].map(renderField)}
+                    </div>
+                    <p className="mt-3 text-xs leading-5 text-slate-500">
+                      Use a two-letter country code, such as IN for India.
+                    </p>
+                  </section>
+                  <section
+                    aria-labelledby="guardian-title"
+                    className="border-t border-slate-100 pt-6"
+                  >
+                    <h3
+                      id="guardian-title"
+                      className="text-sm font-semibold text-slate-900"
+                    >
+                      4. Guardian details
+                    </h3>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      Add these details when a guardian is involved.
+                    </p>
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                      {[
+                        "guardianName",
+                        "guardianRelationship",
+                        "guardianPhone",
+                      ].map(renderField)}
+                    </div>
+                  </section>
+                  <section
+                    aria-labelledby="emergency-title"
+                    className="border-t border-slate-100 pt-6"
+                  >
+                    <h3
+                      id="emergency-title"
+                      className="text-sm font-semibold text-slate-900"
+                    >
+                      5. Emergency contact
+                    </h3>
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                      {[
+                        "emergencyContactName",
+                        "emergencyContactRelationship",
+                        "emergencyContactPhone",
+                      ].map(renderField)}
+                    </div>
+                  </section>
                 </div>
+                <aside
+                  aria-label="Registration guidance"
+                  className="h-fit rounded-xl bg-slate-50 p-5"
+                >
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    Before you register
+                  </h3>
+                  <ul className="mt-3 list-disc space-y-3 pl-4 text-xs leading-6 text-slate-600">
+                    <li>
+                      Search the directory and verify any possible matches.
+                    </li>
+                    <li>
+                      A medical record number is assigned when the record is
+                      created.
+                    </li>
+                    <li>
+                      A shared phone number may belong to a guardian or another
+                      contact.
+                    </li>
+                    <li>
+                      Patient portal access is managed separately from the
+                      patient record.
+                    </li>
+                  </ul>
+                </aside>
               </div>
 
-              <p className="form-error" role="alert">
-                {formError}
-              </p>
+              {formError && (
+                <p
+                  role="alert"
+                  className="mx-5 mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-800 sm:mx-6"
+                >
+                  {formError}
+                </p>
+              )}
+
               {duplicates && (
                 <section
-                  className="conflict-notice"
                   aria-labelledby="duplicate-title"
+                  className="mx-5 mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 sm:mx-6 sm:p-5"
                 >
-                  <h3 id="duplicate-title">
+                  <h3
+                    id="duplicate-title"
+                    className="text-base font-semibold text-amber-950"
+                  >
                     Review possible existing patients
                   </h3>
-
-                  <p>
+                  <p className="mt-2 text-sm leading-6 text-amber-900">
                     Up to five matches are shown. A shared name or phone number
                     does not prove these records belong to the same person.
                   </p>
-
-                  <ul className="duplicate-list">
+                  <ul className="mt-4 grid list-none gap-3 sm:grid-cols-2">
                     {duplicates.map((candidate) => (
-                      <li key={candidate.id}>
-                        <strong>{candidate.fullName}</strong>
-                        <span className="record-id">MRN: {candidate.mrn}</span>
-                        <span>
+                      <li
+                        key={candidate.id}
+                        className="min-w-0 rounded-xl border border-amber-200 bg-white p-4"
+                      >
+                        <strong className="block break-words text-sm text-slate-900">
+                          {candidate.fullName}
+                        </strong>
+                        <p className="mt-1 break-words text-xs font-medium text-slate-600">
+                          MRN: {candidate.mrn}
+                        </p>
+                        <p className="mt-2 break-words text-xs leading-5 text-slate-500">
                           {candidate.phone || "Phone not provided"} ·{" "}
                           {candidate.city || "City not provided"}
-                        </span>
-
+                        </p>
                         <Link
-                          className="text-link"
                           href={`/patients/${candidate.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           prefetch={false}
+                          className="mt-3 inline-flex min-h-11 items-center text-xs font-semibold text-teal-800 underline underline-offset-4"
                         >
-                          Open record in a new tab
+                          Open record in a new tab{" "}
+                          <span aria-hidden="true" className="ml-1">
+                            ↗
+                          </span>
                         </Link>
                       </li>
                     ))}
                   </ul>
-
-                  <label className="duplicate-confirmation">
+                  <label className="mt-5 flex cursor-pointer items-start gap-3 text-sm leading-6 text-amber-950">
                     <input
                       type="checkbox"
                       checked={duplicateConfirmed}
                       onChange={(event) =>
                         setDuplicateConfirmed(event.target.checked)
                       }
+                      className="mt-1 size-4 shrink-0 accent-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
                     />
-
                     <span>
                       I reviewed the possible matches and verified that this
                       registration is for a different person.
@@ -512,75 +713,89 @@ export default function PatientWorkspace() {
                 </section>
               )}
 
-              <div className="form-actions">
-                <button
-                  className="primary-button"
-                  type="submit"
-                  disabled={duplicates !== null && !duplicateConfirmed}
-                >
-                  {saving ? "Registering..." : "Register patient"}
-                </button>
-
-                <button
-                  className="secondary-button"
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                >
-                  Cancel
-                </button>
+              <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 bg-slate-50/60 px-5 py-4 sm:px-6">
+                <p className="text-xs leading-5 text-slate-500">
+                  Review the details before saving the patient record.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className={secondaryButton}
+                    onClick={() => setShowForm(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className={primaryButton}
+                    disabled={
+                      saving || (duplicates !== null && !duplicateConfirmed)
+                    }
+                  >
+                    {saving ? "Registering…" : "Register patient"}
+                  </button>
+                </div>
               </div>
             </fieldset>
           </form>
         </section>
       )}
 
-      <section className="panel" aria-labelledby="directory-title">
-        <div className="panel-heading">
+      <section
+        aria-labelledby="directory-title"
+        className="overflow-hidden rounded-2xl border border-slate-200 bg-white"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 p-5 sm:p-6">
           <div>
-            <h2 id="directory-title">Patient directory</h2>
-            <p className="muted" role="status">
+            <h2
+              id="directory-title"
+              className="text-lg font-semibold tracking-tight text-slate-950"
+            >
+              Patient directory
+            </h2>
+            <p role="status" className="mt-2 text-xs leading-5 text-slate-500">
               {loading
-                ? "Loading patients..."
+                ? "Loading patients…"
                 : data
                   ? `${data.pagination.total} matching patients`
                   : "Patient list unavailable"}
             </p>
           </div>
-
           <button
-            className="secondary-button"
             type="button"
+            className={secondaryButton}
             disabled={loading}
             onClick={() => setReload((current) => current + 1)}
           >
-            Refresh
+            Refresh list
           </button>
         </div>
-
-        <form className="patient-search" onSubmit={submitSearch}>
-          <div className="form-field">
-            <label htmlFor="patient-search">
-              {" "}
+        <form
+          className="border-b border-slate-100 p-5 sm:p-6"
+          onSubmit={submitSearch}
+        >
+          <div className="flex flex-wrap items-end gap-3">
+            <label
+              htmlFor="patient-search"
+              className="min-w-0 flex-[1_1_320px] text-xs font-semibold text-slate-600"
+            >
               Search by MRN, name or phone
+              <input
+                id="patient-search"
+                type="search"
+                maxLength={100}
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                placeholder="Enter patient name, MRN or phone"
+                className={inputClass}
+              />
             </label>
-            <input
-              id="patient-search"
-              type="search"
-              maxLength={100}
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              placeholder="Search patients..."
-            />
-          </div>
-
-          <div className="form-actions">
-            <button className="secondary-button" type="submit">
+            <button type="submit" className={primaryButton}>
               Search
             </button>
-
             <button
-              className="secondary-button"
               type="button"
+              className={secondaryButton}
               onClick={() => {
                 setSearchInput("");
                 setSearch("");
@@ -591,90 +806,210 @@ export default function PatientWorkspace() {
               Clear
             </button>
           </div>
+          <p className="mt-3 text-xs leading-5 text-slate-500">
+            {search ? (
+              <>
+                Showing results for{" "}
+                <strong className="break-words font-semibold text-slate-700">
+                  {search}
+                </strong>
+                . Select Clear to view all records.
+              </>
+            ) : (
+              "Search runs when you select Search. Open a patient record to review its details."
+            )}
+          </p>
         </form>
 
         <div aria-busy={loading}>
           {loading ? (
-            <p className="patient-feedback">Loading patient records...</p>
+            <p
+              role="status"
+              className="px-6 py-12 text-center text-sm text-slate-500"
+            >
+              Loading patient records…
+            </p>
           ) : currentResult?.error ? (
-            <div className="empty-state">
-              <p className="form-error" role="alert">
+            <div className="px-6 py-12 text-center">
+              <p role="alert" className="text-sm leading-6 text-red-700">
                 {currentResult.error}
               </p>
               <button
-                className="secondary-button"
                 type="button"
+                className={`${secondaryButton} mt-5`}
                 onClick={() => setReload((current) => current + 1)}
               >
                 Try again
               </button>
             </div>
           ) : data?.items.length === 0 ? (
-            <div className="empty-state">
-              <h3>No matching patients</h3>
-              <p className="muted">
-                Try another search or register a new patient.
+            <div className="px-6 py-14 text-center">
+              <h3 className="text-base font-semibold text-slate-900">
+                No matching patients
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Try another search
+                {canCreate
+                  ? " or use Register patient to create a record."
+                  : "."}
               </p>
             </div>
           ) : data ? (
             <>
+              <ul
+                aria-label="Patient records"
+                className="m-0 grid list-none gap-4 bg-slate-50/60 p-4 sm:grid-cols-2 lg:hidden"
+              >
+                {data.items.map((patient) => (
+                  <li
+                    key={patient.id}
+                    className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4"
+                  >
+                    <Link
+                      href={`/patients/${patient.id}`}
+                      prefetch={false}
+                      className="inline-flex min-h-11 items-center gap-3 font-semibold text-slate-900 hover:text-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="grid size-10 shrink-0 place-items-center rounded-xl bg-teal-50 text-sm text-teal-800"
+                      >
+                        {patient.fullName.trim().charAt(0).toUpperCase() || "P"}
+                      </span>
+                      <span className="min-w-0 break-words">
+                        {patient.fullName}
+                      </span>
+                    </Link>
+                    <p className="mt-3 break-words text-xs font-semibold text-teal-800">
+                      MRN: {patient.mrn}
+                    </p>
+                    <dl className="mt-4 grid gap-3 border-t border-slate-100 pt-4 text-sm">
+                      <div>
+                        <dt className="text-xs text-slate-500">Phone</dt>
+                        <dd className="mt-1 break-words text-slate-700">
+                          {patient.phone || "Not provided"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs text-slate-500">City / town</dt>
+                        <dd className="mt-1 break-words text-slate-700">
+                          {patient.city || "Not provided"}
+                        </dd>
+                      </div>
+                    </dl>
+                    <Link
+                      href={`/patients/${patient.id}`}
+                      prefetch={false}
+                      className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-teal-800 hover:underline"
+                    >
+                      View patient record <span aria-hidden="true">→</span>
+                      <span className="sr-only"> for {patient.fullName}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
               <div
-                className="table-scroll"
+                className="hidden overflow-x-auto lg:block"
                 role="region"
-                aria-label="Patient directory"
+                aria-label="Patient directory table"
                 tabIndex={0}
               >
-                <table>
+                <table className="w-full min-w-[680px] border-collapse text-left">
                   <caption className="sr-only">
-                    Patient names, identifiers, phone numbers and cities
+                    Patient names, medical record numbers, phone numbers and
+                    cities
                   </caption>
                   <thead>
                     <tr>
-                      <th scope="col">Patient</th>
-                      <th scope="col">Phone</th>
-                      <th scope="col">City</th>
+                      {[
+                        "Patient",
+                        "Medical record number",
+                        "Phone",
+                        "City / town",
+                        "Record",
+                      ].map((title) => (
+                        <th
+                          key={title}
+                          scope="col"
+                          className="border-b border-slate-200 bg-slate-50 px-5 py-3.5 text-[11px] font-semibold tracking-wide text-slate-500"
+                        >
+                          {title}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-100">
                     {data.items.map((patient) => (
-                      <tr key={patient.id}>
-                        <th scope="row">
+                      <tr key={patient.id} className="hover:bg-slate-50/70">
+                        <th
+                          scope="row"
+                          className="max-w-72 px-5 py-4 text-sm font-semibold text-slate-900"
+                        >
                           <Link
-                            className="patient-name text-link"
                             href={`/patients/${patient.id}`}
                             prefetch={false}
+                            className="flex min-h-11 items-center gap-3 rounded-lg hover:text-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
                           >
-                            {patient.fullName}
+                            <span
+                              aria-hidden="true"
+                              className="grid size-9 shrink-0 place-items-center rounded-xl bg-teal-50 text-xs text-teal-800"
+                            >
+                              {patient.fullName
+                                .trim()
+                                .charAt(0)
+                                .toUpperCase() || "P"}
+                            </span>
+                            <span className="min-w-0 break-words">
+                              {patient.fullName}
+                            </span>
                           </Link>
-                          <span className="record-id">MRN: {patient.mrn}</span>
                         </th>
-                        <td>{patient.phone || "Not provided"}</td>
-                        <td>{patient.city || "Not provided"}</td>
+                        <td className="break-words px-5 py-4 text-xs font-semibold text-teal-800">
+                          {patient.mrn}
+                        </td>
+                        <td className="px-5 py-4 text-sm tabular-nums text-slate-600">
+                          {patient.phone || "Not provided"}
+                        </td>
+                        <td className="max-w-48 break-words px-5 py-4 text-sm text-slate-600">
+                          {patient.city || "Not provided"}
+                        </td>
+                        <td className="px-5 py-4">
+                          <Link
+                            href={`/patients/${patient.id}`}
+                            prefetch={false}
+                            className={secondaryButton}
+                          >
+                            View record
+                            <span className="sr-only">
+                              {" "}
+                              for {patient.fullName}
+                            </span>
+                            <span aria-hidden="true">↗</span>
+                          </Link>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-
-              <div className="pagination-bar">
-                <span>
+              <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 px-5 py-4 sm:px-6">
+                <p className="text-xs tabular-nums text-slate-500">
                   Page {data.pagination.page} of{" "}
-                  {Math.max(1, data.pagination.totalPages)}
-                </span>
-
-                <div className="pagination-actions">
+                  {Math.max(1, data.pagination.totalPages)} ·{" "}
+                  {data.pagination.total} records
+                </p>
+                <div className="flex gap-2">
                   <button
-                    className="secondary-button"
                     type="button"
+                    className={secondaryButton}
                     disabled={page <= 1}
                     onClick={() => setPage((current) => current - 1)}
                   >
                     Previous
                   </button>
-
                   <button
-                    className="secondary-button"
                     type="button"
+                    className={secondaryButton}
                     disabled={page >= data.pagination.totalPages}
                     onClick={() => setPage((current) => current + 1)}
                   >
@@ -686,6 +1021,9 @@ export default function PatientWorkspace() {
           ) : null}
         </div>
       </section>
-    </>
+      <p className="text-xs leading-5 text-slate-500">
+        For testing, use fictional patient information.
+      </p>
+    </div>
   );
 }

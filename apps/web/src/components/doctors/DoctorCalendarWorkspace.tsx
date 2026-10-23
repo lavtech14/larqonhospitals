@@ -227,8 +227,10 @@ export default function DoctorCalendarWorkspace({ doctorId }: Props) {
 
   if (!canRead) {
     return (
-      <section className="panel">
-        <h1>Access unavailable</h1>
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+          Access unavailable
+        </h1>
         <p>Your account cannot view doctor availability.</p>
       </section>
     );
@@ -239,32 +241,39 @@ export default function DoctorCalendarWorkspace({ doctorId }: Props) {
   const hospitalClosed = data?.hospitalClosure?.isClosed ?? false;
 
   return (
-    <div className="doctor-calendar">
-      <header className="page-heading">
+    <div className="grid min-w-0 gap-6">
+      <header className="mb-6 flex flex-wrap items-end justify-between gap-5">
         <div>
-          <p className="eyebrow">Doctor calendar</p>
-          <h1>{data?.slots.doctor.displayName ?? "Consultation calendar"}</h1>
-          <p className="muted">
+          <p className="mb-2 text-[10px] font-bold tracking-[0.16em] text-teal-800">
+            Doctor calendar
+          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+            {data?.slots.doctor.displayName ?? "Consultation calendar"}
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500">
             Review consultation slots, doctor leave, and hospital closures.
           </p>
         </div>
 
-        <div className="calendar-toolbar">
-          <Link href="/doctors" className="secondary-button">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/doctors"
+            className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
             Back to doctors
           </Link>
 
           <Link
             href={`/doctors/${doctorId}/availability`}
-            className="secondary-button"
+            className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Weekly availability
           </Link>
         </div>
       </header>
 
-      <section className="panel calendar-controls">
-        <label className="form-field">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 flex flex-wrap items-end gap-3 [&>label]:flex-[1_1_240px] [&>label]:max-w-md">
+        <label className="block min-w-0 text-xs font-semibold text-slate-600 [&>label]:block [&>span]:block [&>input]:mt-2 [&>input]:block [&>input]:min-h-12 [&>input]:w-full [&>input]:min-w-0 [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:bg-white [&>input]:px-3 [&>input]:py-2 [&>input]:text-sm [&>input]:font-normal [&>input]:text-slate-900 [&>input:disabled]:bg-slate-50 [&>select]:mt-2 [&>select]:block [&>select]:min-h-12 [&>select]:w-full [&>select]:min-w-0 [&>select]:rounded-xl [&>select]:border [&>select]:border-slate-300 [&>select]:bg-white [&>select]:px-3 [&>select]:py-2 [&>select]:text-sm [&>select]:font-normal [&>select]:text-slate-900 [&>select:disabled]:bg-slate-50 [&>input:focus-visible]:outline-2 [&>input:focus-visible]:outline-offset-2 [&>input:focus-visible]:outline-teal-700 [&>select:focus-visible]:outline-2 [&>select:focus-visible]:outline-offset-2 [&>select:focus-visible]:outline-teal-700">
           <span>Consultation date</span>
           <input
             type="date"
@@ -284,7 +293,7 @@ export default function DoctorCalendarWorkspace({ doctorId }: Props) {
 
         <button
           type="button"
-          className="secondary-button"
+          className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
           disabled={busy || !date}
           onClick={() => {
             setMessage("");
@@ -294,28 +303,41 @@ export default function DoctorCalendarWorkspace({ doctorId }: Props) {
           {loading ? "Refreshing..." : "Refresh calendar"}
         </button>
 
-        <p className="muted">All times are in India Standard Time.</p>
+        <p className="mt-2 text-sm leading-6 text-slate-500">
+          All times are in India Standard Time.
+        </p>
       </section>
 
       <div aria-live="polite">
         {error && (
-          <p className="form-error" role="alert">
+          <p
+            className="my-4 text-sm leading-6 text-red-700 empty:hidden"
+            role="alert"
+          >
             {error}
           </p>
         )}
-        {message && <p className="success-message">{message}</p>}
+        {message && (
+          <p className="my-4 text-sm leading-6 text-teal-800 empty:hidden">
+            {message}
+          </p>
+        )}
       </div>
 
       {loading && <p role="status">Loading calendar...</p>}
 
       {data && (
         <>
-          <div className="calendar-status-grid">
-            <section className="panel calendar-status-card">
+          <div className="grid gap-5 lg:grid-cols-2">
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 flex flex-col items-start justify-between gap-5">
               <div>
-                <p className="eyebrow">Doctor</p>
-                <h2>{doctorClosed ? "On leave" : "No leave recorded"}</h2>
-                <p className="muted">
+                <p className="mb-2 text-[10px] font-bold tracking-[0.16em] text-teal-800">
+                  Doctor
+                </p>
+                <h2 className="text-lg font-semibold tracking-tight text-slate-950">
+                  {doctorClosed ? "On leave" : "No leave recorded"}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
                   {doctorClosed
                     ? "Consultation slots are blocked for this date."
                     : "Weekly consultation hours apply."}
@@ -325,7 +347,7 @@ export default function DoctorCalendarWorkspace({ doctorId }: Props) {
               {canManage && (
                 <button
                   type="button"
-                  className="secondary-button"
+                  className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={busy || stale}
                   onClick={() => void saveClosure("doctor", !doctorClosed)}
                 >
@@ -334,11 +356,15 @@ export default function DoctorCalendarWorkspace({ doctorId }: Props) {
               )}
             </section>
 
-            <section className="panel calendar-status-card">
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 flex flex-col items-start justify-between gap-5">
               <div>
-                <p className="eyebrow">Hospital</p>
-                <h2>{hospitalClosed ? "Closed" : "No closure recorded"}</h2>
-                <p className="muted">
+                <p className="mb-2 text-[10px] font-bold tracking-[0.16em] text-teal-800">
+                  Hospital
+                </p>
+                <h2 className="text-lg font-semibold tracking-tight text-slate-950">
+                  {hospitalClosed ? "Closed" : "No closure recorded"}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
                   {hospitalClosed
                     ? "Consultation slots are blocked for every doctor."
                     : "Each doctor’s schedule and leave apply."}
@@ -346,16 +372,16 @@ export default function DoctorCalendarWorkspace({ doctorId }: Props) {
               </div>
 
               {canManage && (
-                <details className="hospital-closure-action">
+                <details className="w-full border-t border-slate-100 pt-3 [&>summary]:cursor-pointer [&>summary]:py-2 [&>summary]:text-sm [&>summary]:font-semibold [&>summary]:text-slate-700 [&>button]:mt-4">
                   <summary>Manage hospital closure</summary>
-                  <p className="muted">
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
                     This changes slot availability for every doctor on{" "}
                     {dateLabel(date)}.
                   </p>
 
                   <button
                     type="button"
-                    className="secondary-button"
+                    className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={busy || stale}
                     onClick={() =>
                       void saveClosure("hospital", !hospitalClosed)
@@ -370,25 +396,32 @@ export default function DoctorCalendarWorkspace({ doctorId }: Props) {
             </section>
           </div>
 
-          <section className="panel">
-            <div className="calendar-slot-heading">
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="eyebrow">Slot preview</p>
-                <h2>{dateLabel(date)}</h2>
+                <p className="mb-2 text-[10px] font-bold tracking-[0.16em] text-teal-800">
+                  Slot preview
+                </p>
+                <h2 className="text-lg font-semibold tracking-tight text-slate-950">
+                  {dateLabel(date)}
+                </h2>
               </div>
-              <span className="calendar-count">
+              <span className="rounded-full bg-teal-50 px-3 py-1.5 text-xs font-semibold tabular-nums text-teal-900">
                 {data.slots.slots.length} slots
               </span>
             </div>
 
-            <p className="muted">
+            <p className="mt-2 text-sm leading-6 text-slate-500">
               {reasonLabels[data.slots.reason] ?? "No slots are available."}
             </p>
 
             {data.slots.slots.length > 0 && (
-              <ul className="calendar-slot-grid">
+              <ul className="mt-5 grid list-none gap-3 min-[380px]:grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 {data.slots.slots.map((slot) => (
-                  <li key={slot.startsAt} className="calendar-slot">
+                  <li
+                    key={slot.startsAt}
+                    className="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-4 [&>strong]:text-xs [&>strong]:tabular-nums [&>strong]:text-slate-900 [&>span]:text-xs [&>span]:text-slate-500"
+                  >
                     <strong>
                       {slot.localStart} – {slot.localEnd}
                     </strong>
@@ -398,7 +431,7 @@ export default function DoctorCalendarWorkspace({ doctorId }: Props) {
               </ul>
             )}
 
-            <p className="calendar-footnote muted">
+            <p className="mt-6 border-t border-slate-100 pt-4 text-xs leading-6 text-slate-500">
               Existing doctor bookings are excluded. Availability can change
               until your booking is confirmed. Refresh to update the results.
             </p>

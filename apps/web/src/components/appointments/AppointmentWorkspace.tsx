@@ -183,318 +183,547 @@ export default function AppointmentWorkspace({
     }
   }
 
+  const primaryButton =
+    "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-teal-800 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50";
+  const secondaryButton =
+    "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50";
+  const inputClass =
+    "mt-2 block min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-normal text-slate-900 focus:border-teal-700 focus:outline-2 focus:outline-offset-2 focus:outline-teal-700 disabled:cursor-wait disabled:bg-slate-50 disabled:text-slate-500";
+  const canBook =
+    !ownView &&
+    [
+      "appointments.create",
+      "patients.demographics.read",
+      "doctors.read",
+      "availability.read",
+    ].every((permission) => user.permissions?.includes(permission));
+
+  function renderStatus(appointment: Appointment) {
+    return (
+      <div className="space-y-2">
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${appointment.status === "BOOKED" ? "bg-blue-50 text-blue-800 ring-blue-100" : "bg-slate-100 text-slate-600 ring-slate-200"}`}
+        >
+          <span
+            aria-hidden="true"
+            className={`size-1.5 rounded-full ${appointment.status === "BOOKED" ? "bg-blue-600" : "bg-slate-400"}`}
+          />
+          {appointment.status === "BOOKED" ? "Booked" : "Cancelled"}
+        </span>
+        {appointment.consultationEndedAt && (
+          <div>
+            <p className="text-xs font-semibold text-teal-800">
+              Consultation completed
+            </p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">
+              {dateFormatter.format(new Date(appointment.consultationEndedAt))}{" "}
+              ·{" "}
+              {timeFormatter.format(new Date(appointment.consultationEndedAt))}
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function renderMode(appointment: Appointment) {
+    return (
+      <span
+        className={`inline-flex rounded-lg px-2.5 py-1 text-xs font-medium ${appointment.mode === "ONLINE" ? "bg-violet-50 text-violet-800" : "bg-slate-100 text-slate-600"}`}
+      >
+        {appointment.mode === "ONLINE" ? "Online" : "In person"}
+      </span>
+    );
+  }
+
+  function renderActions(appointment: Appointment) {
+    if (
+      ownView &&
+      appointment.mode === "ONLINE" &&
+      appointment.status === "BOOKED" &&
+      !appointment.consultationEndedAt
+    ) {
+      return (
+        <Link
+          className={primaryButton}
+          href={`/my-appointments/${appointment.id}/consultation`}
+          aria-label={`Join consultation with ${appointment.patient.fullName}`}
+        >
+          Join consultation <span aria-hidden="true">↗</span>
+        </Link>
+      );
+    }
+
+    if (
+      canCancel &&
+      appointment.status === "BOOKED" &&
+      !appointment.consultationEndedAt
+    ) {
+      if (confirmingId === appointment.id) {
+        return (
+          <div className="w-full max-w-sm rounded-xl border border-amber-200 bg-amber-50 p-4 text-left">
+            <p className="text-sm leading-6 text-amber-950">
+              Cancel the appointment for{" "}
+              <strong>{appointment.patient.fullName}</strong>?
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={secondaryButton}
+                disabled={busy}
+                onClick={() => setConfirmingId(null)}
+              >
+                Keep booking
+              </button>
+              <button
+                type="button"
+                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-red-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700 disabled:cursor-wait disabled:opacity-50"
+                disabled={busy}
+                onClick={() => void cancel(appointment)}
+              >
+                {cancelling ? "Cancelling…" : "Confirm cancellation"}
+              </button>
+            </div>
+          </div>
+        );
+      }
+      return (
+        <button
+          type="button"
+          className={secondaryButton}
+          disabled={busy}
+          aria-label={`Cancel appointment for ${appointment.patient.fullName}`}
+          onClick={() => {
+            setError("");
+            setNotice("");
+            setConfirmingId(appointment.id);
+          }}
+        >
+          Cancel booking
+        </button>
+      );
+    }
+
+    return (
+      <span className="text-xs leading-5 text-slate-500">
+        {appointment.consultationEndedAt
+          ? "No further call action"
+          : appointment.status === "CANCELLED"
+            ? "Booking cancelled"
+            : "No actions available"}
+      </span>
+    );
+  }
+
   if (!canRead) {
     return (
-      <section className="panel">
-        <h1>Access unavailable</h1>
-        <p>Your account cannot view appointments.</p>
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
+        <h1 className="text-2xl font-bold text-slate-950">
+          Access unavailable
+        </h1>
+        <p className="mt-3 text-sm leading-6 text-slate-600">
+          Your account cannot view appointments. Contact your hospital
+          administrator if you need access.
+        </p>
       </section>
     );
   }
 
   return (
-    <div className="appointment-workspace">
-      <header className="page-heading">
-        {!ownView &&
-          [
-            "appointments.create",
-            "patients.demographics.read",
-            "doctors.read",
-            "availability.read",
-          ].every((permission) => user.permissions?.includes(permission)) && (
-            <Link href="/appointments/new" className="primary-button">
-              Book appointment
-            </Link>
-          )}
-        <div>
-          <p className="eyebrow">Patient visits</p>
-          <h1>{ownView ? "My appointments" : "Appointments"}</h1>
-          <p className="muted">
+    <div className="min-w-0 space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-5">
+        <div className="max-w-2xl">
+          <p className="text-[11px] font-bold tracking-[0.18em] text-teal-800">
+            PATIENT VISITS
+          </p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+            {ownView ? "My appointments" : "Appointments"}
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
             {ownView
-              ? "Review appointments assigned to your linked doctor profile."
-              : "Review bookings and manage future cancellations."}{" "}
-            All times are in India Standard Time.
+              ? "Review your assigned visits and join online consultations."
+              : "Find patient bookings and manage future cancellations."}
           </p>
         </div>
+        {canBook && (
+          <Link href="/appointments/new" className={primaryButton}>
+            <span aria-hidden="true" className="text-lg leading-none">
+              +
+            </span>
+            Book appointment
+          </Link>
+        )}
       </header>
 
-      <section className="panel">
+      <section
+        aria-labelledby="filters-title"
+        className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6"
+      >
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <h2
+            id="filters-title"
+            className="text-base font-semibold text-slate-900"
+          >
+            Find appointments
+          </h2>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+            India Standard Time · UTC+05:30
+          </span>
+        </div>
         <form
-          className="appointment-filters"
           onSubmit={(event) => {
             event.preventDefault();
+            if (busy) return;
             setNotice("");
             void load(filters);
           }}
         >
-          <label className="form-field">
-            <span>From date</span>
-            <input
-              type="date"
-              required
-              value={filters.from}
-              disabled={busy}
-              onChange={(event) =>
-                setFilters((current) => ({
-                  ...current,
-                  from: event.target.value,
-                }))
-              }
-            />
-          </label>
-
-          <label className="form-field">
-            <span>To date</span>
-            <input
-              type="date"
-              required
-              min={filters.from || undefined}
-              value={filters.to}
-              disabled={busy}
-              onChange={(event) =>
-                setFilters((current) => ({
-                  ...current,
-                  to: event.target.value,
-                }))
-              }
-            />
-          </label>
-
-          <label className="form-field">
-            <span>Status</span>
-            <select
-              value={filters.status}
-              disabled={busy}
-              onChange={(event) =>
-                setFilters((current) => ({
-                  ...current,
-                  status: event.target.value,
-                }))
-              }
-            >
-              <option value="">All statuses</option>
-              <option value="BOOKED">Booked</option>
-              <option value="CANCELLED">Cancelled</option>
-            </select>
-          </label>
-
-          <button type="submit" className="primary-button" disabled={busy}>
-            {loading ? "Loading..." : "Apply filters"}
-          </button>
-
-          <button
-            type="button"
-            className="secondary-button"
+          <fieldset
             disabled={busy}
-            onClick={() => {
-              const today = hospitalToday();
-              const selected = {
-                from: today,
-                to: today,
-                status: filters.status,
-              };
-
-              setFilters(selected);
-              setNotice("");
-              void load(selected);
-            }}
+            className="m-0 grid min-w-0 gap-4 border-0 p-0 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_auto]"
           >
-            Today
-          </button>
+            <legend className="sr-only">Appointment filters</legend>
+            <label className="min-w-0 text-xs font-semibold text-slate-600">
+              From date
+              <input
+                type="date"
+                required
+                value={filters.from}
+                className={inputClass}
+                onChange={(event) =>
+                  setFilters((current) => ({
+                    ...current,
+                    from: event.target.value,
+                  }))
+                }
+              />
+            </label>
+            <label className="min-w-0 text-xs font-semibold text-slate-600">
+              To date
+              <input
+                type="date"
+                required
+                min={filters.from || undefined}
+                value={filters.to}
+                className={inputClass}
+                onChange={(event) =>
+                  setFilters((current) => ({
+                    ...current,
+                    to: event.target.value,
+                  }))
+                }
+              />
+            </label>
+            <label className="min-w-0 text-xs font-semibold text-slate-600">
+              Booking status
+              <select
+                value={filters.status}
+                className={inputClass}
+                onChange={(event) =>
+                  setFilters((current) => ({
+                    ...current,
+                    status: event.target.value,
+                  }))
+                }
+              >
+                <option value="">All statuses</option>
+                <option value="BOOKED">Booked</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+            </label>
+            <div className="flex flex-wrap items-end gap-2">
+              <button
+                type="submit"
+                className={`${primaryButton} flex-1 sm:flex-none`}
+                disabled={busy}
+              >
+                {loading ? "Loading…" : "Apply filters"}
+              </button>
+              <button
+                type="button"
+                className={`${secondaryButton} flex-1 sm:flex-none`}
+                disabled={busy}
+                onClick={() => {
+                  const today = hospitalToday();
+                  const selected = {
+                    from: today,
+                    to: today,
+                    status: filters.status,
+                  };
+                  setFilters(selected);
+                  setNotice("");
+                  void load(selected);
+                }}
+              >
+                Today
+              </button>
+            </div>
+          </fieldset>
         </form>
-
-        <p className="muted">Choose up to 31 dates, or select Today.</p>
+        <p className="mt-4 text-xs leading-5 text-slate-500">
+          Choose a range of up to 31 dates, or select Today. Booking status is
+          separate from consultation completion.
+        </p>
       </section>
 
-      <div aria-live="polite">
-        {error && (
-          <p className="form-error" role="alert">
-            {error}
-          </p>
-        )}
-        {notice && <p className="success-message">{notice}</p>}
-        {loading && <p role="status">Loading appointments...</p>}
-      </div>
+      {error && (
+        <div
+          role="alert"
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-800"
+        >
+          {error}
+        </div>
+      )}
+      {notice && (
+        <div
+          role="status"
+          className="rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-900"
+        >
+          {notice}
+        </div>
+      )}
+      {loading && (
+        <p
+          role="status"
+          className="flex items-center gap-2 text-sm text-slate-600"
+        >
+          <span
+            aria-hidden="true"
+            className="size-2 rounded-full bg-teal-700"
+          />
+          Loading appointments…
+        </p>
+      )}
 
       {!result && !loading && (
-        <section className="panel">
-          <h2>Find appointments</h2>
-          <p className="muted">Select a date range above or choose Today.</p>
+        <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
+          <span
+            aria-hidden="true"
+            className="mx-auto mb-4 grid size-12 place-items-center rounded-2xl bg-teal-50 text-teal-800"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              className="size-6"
+            >
+              <rect x="3" y="5" width="18" height="16" rx="2" />
+              <path d="M7 2v6m10-6v6M3 11h18m-13 4h3" />
+            </svg>
+          </span>
+          <h2 className="text-lg font-semibold text-slate-900">
+            Your appointment list starts here
+          </h2>
+          <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-500">
+            Choose dates above and apply your filters, or select Today to review
+            today’s visits.
+          </p>
         </section>
       )}
 
       {result && applied && (
-        <section className="panel" aria-busy={busy}>
-          <div className="appointment-list-heading">
+        <section
+          aria-labelledby="list-title"
+          aria-busy={busy}
+          className="overflow-hidden rounded-2xl border border-slate-200 bg-white"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 p-5 sm:p-6">
             <div>
-              <h2>Appointment list</h2>
-              <p className="muted">
-                {applied.from} to {applied.to}
-                {" · "}
-                {applied.status || "All statuses"}
-                {" · "}
-                {result.total} results
+              <div className="flex items-center gap-3">
+                <h2
+                  id="list-title"
+                  className="text-lg font-semibold tracking-tight text-slate-950"
+                >
+                  {ownView ? "Assigned visits" : "Appointment list"}
+                </h2>
+                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold tabular-nums text-slate-600">
+                  {result.total} results
+                </span>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                {applied.from} to {applied.to} ·{" "}
+                {applied.status === "BOOKED"
+                  ? "Booked"
+                  : applied.status === "CANCELLED"
+                    ? "Cancelled"
+                    : "All booking statuses"}
               </p>
             </div>
-
             <button
               type="button"
-              className="secondary-button"
+              className={secondaryButton}
               disabled={busy}
               onClick={() => {
                 setNotice("");
                 void load(applied, result.page);
               }}
             >
-              Refresh
+              Refresh list
             </button>
           </div>
 
           {result.items.length === 0 ? (
-            <p>No appointments match these filters.</p>
-          ) : (
-            <div className="table-scroll">
-              <table className="appointment-table">
-                <caption className="appointment-caption">
-                  Appointments for the applied date range
-                </caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Patient</th>
-                    <th scope="col">Doctor</th>
-                    <th scope="col">Date and time</th>
-                    <th scope="col">Status</th>
-                    {canCancel && <th scope="col">Actions</th>}
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {result.items.map((appointment) => (
-                    <tr key={appointment.id}>
-                      <td>{appointment.patient.fullName}</td>
-                      <td>{appointment.doctor.displayName}</td>
-                      <td>
-                        <div>
-                          {dateFormatter.format(new Date(appointment.startsAt))}
-                        </div>
-                        <span className="muted">
-                          {timeFormatter.format(new Date(appointment.startsAt))}
-                          {" – "}
-                          {timeFormatter.format(new Date(appointment.endsAt))}
-                        </span>
-                      </td>
-                      <td>
-                        <span
-                          className={`appointment-badge ${
-                            appointment.status === "BOOKED"
-                              ? "appointment-badge-booked"
-                              : "appointment-badge-cancelled"
-                          }`}
-                        >
-                          {appointment.status === "BOOKED"
-                            ? "Booked"
-                            : "Cancelled"}
-                        </span>
-                        <div className="muted">
-                          {appointment.mode === "ONLINE"
-                            ? "Online"
-                            : "In person"}
-                        </div>
-                        {scope === "mine" &&
-                          appointment.mode === "ONLINE" &&
-                          (appointment.consultationEndedAt ? (
-                            <span>
-                              Completed ·{" "}
-                              {new Date(
-                                appointment.consultationEndedAt,
-                              ).toLocaleString("en-IN", {
-                                timeZone: "Asia/Kolkata",
-                                dateStyle: "medium",
-                                timeStyle: "short",
-                              })}
-                            </span>
-                          ) : appointment.status === "BOOKED" ? (
-                            <Link
-                              href={`/my-appointments/${appointment.id}/consultation`}
-                              className="primary-button"
-                            >
-                              Join consultation
-                            </Link>
-                          ) : null)}
-                      </td>
-
-                      {canCancel && (
-                        <td>
-                          {appointment.status === "CANCELLED" ? (
-                            <span className="muted">—</span>
-                          ) : confirmingId === appointment.id ? (
-                            <div className="appointment-confirm">
-                              <p>
-                                Cancel this appointment for{" "}
-                                <strong>{appointment.patient.fullName}</strong>?
-                              </p>
-                              <div className="appointment-actions">
-                                <button
-                                  type="button"
-                                  className="secondary-button"
-                                  disabled={busy}
-                                  onClick={() => setConfirmingId(null)}
-                                >
-                                  Keep booking
-                                </button>
-                                <button
-                                  type="button"
-                                  className="primary-button"
-                                  disabled={busy}
-                                  onClick={() => void cancel(appointment)}
-                                >
-                                  {cancelling
-                                    ? "Cancelling..."
-                                    : "Confirm cancellation"}
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <button
-                              type="button"
-                              className="secondary-button"
-                              disabled={busy}
-                              onClick={() => {
-                                setError("");
-                                setNotice("");
-                                setConfirmingId(appointment.id);
-                              }}
-                            >
-                              Cancel
-                            </button>
-                          )}
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="px-6 py-14 text-center">
+              <h3 className="text-base font-semibold text-slate-900">
+                No appointments found
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Try another date range or choose All statuses, then apply the
+                filters.
+              </p>
             </div>
+          ) : (
+            <>
+              <ul
+                className="m-0 list-none space-y-4 bg-slate-50/60 p-4 lg:hidden"
+                aria-label="Appointments"
+              >
+                {result.items.map((appointment) => (
+                  <li
+                    key={appointment.id}
+                    className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="break-words text-base font-semibold text-slate-950">
+                          {appointment.patient.fullName}
+                        </h3>
+                        <p className="mt-1 break-words text-sm text-slate-500">
+                          {appointment.doctor.displayName}
+                        </p>
+                      </div>
+                      <div className="shrink-0">{renderMode(appointment)}</div>
+                    </div>
+                    <dl className="mt-4 grid gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
+                      <div>
+                        <dt className="text-xs text-slate-500">
+                          Appointment time · IST
+                        </dt>
+                        <dd className="mt-1 text-sm font-medium text-slate-800">
+                          <time dateTime={appointment.startsAt}>
+                            {dateFormatter.format(
+                              new Date(appointment.startsAt),
+                            )}
+                          </time>
+                          <span className="mt-1 block text-xs font-normal tabular-nums text-slate-500">
+                            {timeFormatter.format(
+                              new Date(appointment.startsAt),
+                            )}{" "}
+                            –{" "}
+                            {timeFormatter.format(new Date(appointment.endsAt))}
+                          </span>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="mb-2 text-xs text-slate-500">
+                          Booking status
+                        </dt>
+                        <dd>{renderStatus(appointment)}</dd>
+                      </div>
+                    </dl>
+                    <div className="mt-4 border-t border-slate-100 pt-4">
+                      {renderActions(appointment)}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              <div
+                className="hidden overflow-x-auto lg:block"
+                tabIndex={0}
+                role="region"
+                aria-label="Appointments table"
+              >
+                <table className="w-full min-w-[900px] border-collapse text-left">
+                  <caption className="sr-only">
+                    Appointments for the applied date range. All times are India
+                    Standard Time.
+                  </caption>
+                  <thead>
+                    <tr>
+                      {[
+                        "Patient",
+                        "Doctor",
+                        "Date and time",
+                        "Mode",
+                        "Booking status",
+                        "Actions",
+                      ].map((label) => (
+                        <th
+                          key={label}
+                          scope="col"
+                          className="border-b border-slate-200 bg-slate-50 px-5 py-3.5 text-[11px] font-semibold tracking-wide text-slate-500"
+                        >
+                          {label}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {result.items.map((appointment) => (
+                      <tr key={appointment.id} className="hover:bg-slate-50/70">
+                        <th
+                          scope="row"
+                          className="max-w-56 break-words px-5 py-5 align-top text-sm font-semibold text-slate-900"
+                        >
+                          {appointment.patient.fullName}
+                        </th>
+                        <td className="max-w-48 break-words px-5 py-5 align-top text-sm text-slate-600">
+                          {appointment.doctor.displayName}
+                        </td>
+                        <td className="px-5 py-5 align-top">
+                          <time
+                            dateTime={appointment.startsAt}
+                            className="whitespace-nowrap text-sm font-medium text-slate-800"
+                          >
+                            {dateFormatter.format(
+                              new Date(appointment.startsAt),
+                            )}
+                          </time>
+                          <span className="mt-1.5 block whitespace-nowrap text-xs tabular-nums text-slate-500">
+                            {timeFormatter.format(
+                              new Date(appointment.startsAt),
+                            )}{" "}
+                            –{" "}
+                            {timeFormatter.format(new Date(appointment.endsAt))}
+                          </span>
+                        </td>
+                        <td className="px-5 py-5 align-top">
+                          {renderMode(appointment)}
+                        </td>
+                        <td className="px-5 py-5 align-top">
+                          {renderStatus(appointment)}
+                        </td>
+                        <td className="min-w-44 px-5 py-5 align-top">
+                          {renderActions(appointment)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
 
-          <div className="appointment-pagination">
-            <p className="muted">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 px-5 py-4 sm:px-6">
+            <p className="text-xs tabular-nums text-slate-500">
               Page {result.page} of {Math.max(1, result.totalPages)}
+              {result.items.length > 0 &&
+                ` · Showing ${(result.page - 1) * result.limit + 1}–${(result.page - 1) * result.limit + result.items.length} of ${result.total}`}
             </p>
-
-            <div className="appointment-actions">
+            <div className="flex gap-2">
               <button
                 type="button"
-                className="secondary-button"
+                className={secondaryButton}
                 disabled={busy || result.page <= 1}
                 onClick={() => void load(applied, result.page - 1)}
               >
                 Previous
               </button>
-
               <button
                 type="button"
-                className="secondary-button"
+                className={secondaryButton}
                 disabled={busy || result.page >= result.totalPages}
                 onClick={() => void load(applied, result.page + 1)}
               >

@@ -68,20 +68,25 @@ function ConsultationPresence({
 
   return (
     <div
-      className={`consultation-presence${
-        connectionState === ConnectionState.Connected && otherParticipant
-          ? " consultation-presence-connected"
-          : ""
-      }`}
+      className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-800 bg-slate-900 px-4 py-3 text-xs text-slate-200 sm:px-5 sm:text-sm"
       role="status"
       aria-live="polite"
       aria-atomic="true"
     >
-      <span className="consultation-presence-dot" aria-hidden="true" />
-      {message}
+      <span className="flex items-center gap-2.5">
+        <span
+          aria-hidden="true"
+          className={`size-2 shrink-0 rounded-full ${connectionState === ConnectionState.Connected && otherParticipant ? "bg-emerald-400" : "bg-amber-400"}`}
+        />
+        {message}
+      </span>
+      <span className="text-xs text-slate-400">
+        {audience === "doctor" ? "Doctor workspace" : "Patient portal"}
+      </span>
     </div>
   );
 }
+
 function CallContent() {
   const tracks = useTracks([
     {
@@ -91,8 +96,8 @@ function CallContent() {
   ]);
 
   return (
-    <div className="consultation-media">
-      <div className="consultation-grid">
+    <div className="flex min-h-0 flex-1 flex-col [&_.lk-control-bar]:h-auto! [&_.lk-control-bar]:min-h-20 [&_.lk-control-bar]:shrink-0 [&_.lk-control-bar]:flex-wrap! [&_.lk-control-bar]:gap-2 [&_.lk-control-bar]:px-3 [&_.lk-control-bar]:py-3">
+      <div className="min-h-0 flex-1 overflow-hidden [&>.lk-grid-layout]:h-full">
         <GridLayout tracks={tracks}>
           <ParticipantTile />
         </GridLayout>
@@ -263,41 +268,82 @@ export default function ConsultationRoom({ appointmentId, audience }: Props) {
     }
   }
 
+  const primaryButton =
+    "inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-teal-800 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50";
+  const secondaryButton =
+    "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50";
+  const dangerButton =
+    "inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-800 transition-colors hover:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700 disabled:cursor-wait disabled:opacity-50";
+
   return (
-    <section className="consultation-page">
-      <header className="consultation-heading">
+    <section
+      aria-labelledby="consultation-title"
+      className="mx-auto w-full max-w-6xl space-y-5 px-4 py-6 sm:px-6 sm:py-8 lg:py-10"
+    >
+      <header className="flex flex-wrap items-center justify-between gap-5">
         <div>
-          <p className="eyebrow">LARQON HOSPITALS</p>
-          <h1>Online consultation</h1>
-          <p className="muted">
+          <p className="text-[10px] font-bold tracking-[0.18em] text-teal-800">
+            LARQON HOSPITALS ·{" "}
+            {audience === "doctor" ? "DOCTOR WORKSPACE" : "PATIENT PORTAL"}
+          </p>
+          <h1
+            id="consultation-title"
+            className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl"
+          >
+            Online consultation
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-slate-500">
             {audience === "doctor"
               ? "Connect with your scheduled patient."
               : "Connect with your scheduled doctor."}
           </p>
         </div>
-
         {!session && (
-          <Link href={backHref} className="nav-link">
-            Back to appointments
+          <Link href={backHref} className={secondaryButton}>
+            <span aria-hidden="true">←</span>Back to appointments
           </Link>
         )}
       </header>
+
       {statusError && (
-        <p className="form-error" role="status">
+        <p
+          role="status"
+          className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950"
+        >
           {statusError}
+        </p>
+      )}
+      {error && (
+        <p
+          role="alert"
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-800"
+        >
+          {error}
         </p>
       )}
 
       {audience === "doctor" && (session !== null || closurePending) && (
-        <div style={{ marginBottom: 16 }}>
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:px-5">
+          <div>
+            <p className="text-sm font-semibold text-slate-900">
+              {closurePending
+                ? "Room closure needs attention"
+                : "Consultation controls"}
+            </p>
+            <p className="mt-1 max-w-2xl text-xs leading-6 text-slate-500">
+              {closurePending
+                ? "Completion is saved. Retry closing the server room."
+                : "Use Leave in the call controls to disconnect temporarily. End consultation ends the consultation for both participants."}
+            </p>
+          </div>
           <button
             type="button"
-            className="primary-button"
+            className={dangerButton}
             disabled={endingBusy}
             onClick={endConsultation}
           >
             {endingBusy
-              ? "Please wait..."
+              ? "Please wait…"
               : closurePending
                 ? "Retry room closure"
                 : "End consultation"}
@@ -306,111 +352,184 @@ export default function ConsultationRoom({ appointmentId, audience }: Props) {
       )}
 
       {endedAt && (
-        <div role="status" className="consultation-lobby">
-          <h2>Consultation completed</h2>
-
-          <p className="muted">
-            This consultation has ended. Joining is no longer available.
+        <div
+          role="status"
+          className="rounded-3xl border border-slate-200 bg-white px-6 py-10 text-center sm:py-14"
+        >
+          <span
+            aria-hidden="true"
+            className="mx-auto grid size-16 place-items-center rounded-2xl bg-teal-50 text-3xl text-teal-800"
+          >
+            ✓
+          </span>
+          <h2 className="mt-5 text-2xl font-semibold tracking-tight text-slate-950">
+            Consultation completed
+          </h2>
+          <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-500">
+            This consultation has ended. Joining is no longer available through
+            the portal.
           </p>
-
+          <p className="mt-3 text-xs leading-6 text-slate-500">
+            Completed{" "}
+            {new Date(endedAt).toLocaleString("en-IN", {
+              timeZone: "Asia/Kolkata",
+              dateStyle: "medium",
+              timeStyle: "short",
+            })}{" "}
+            IST
+          </p>
           {closurePending && audience === "doctor" && (
-            <p className="form-error">
+            <p className="mx-auto mt-5 max-w-lg rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
               Completion was saved, but server room closure is pending. Use
-              “Retry room closure”.
+              “Retry room closure” above.
             </p>
           )}
-
-          <Link href={backHref} className="primary-button">
+          <Link href={backHref} className={`${primaryButton} mt-6`}>
             Back to appointments
           </Link>
         </div>
       )}
-      {error && (
-        <p className="form-error" role="alert">
-          {error}
-        </p>
-      )}
 
       {endedAt ? null : session ? (
-        <LiveKitRoom
-          data-lk-theme="default"
-          serverUrl={session.serverUrl}
-          token={session.token}
-          connect
-          audio={microphoneEnabled}
-          video={cameraEnabled}
-          className="consultation-live-room"
-          onError={() => {
-            setError(
-              "A call error occurred. Check your connection and device permissions.",
-            );
-          }}
-          onMediaDeviceFailure={() => {
-            setError(
-              "Camera or microphone access failed. Check browser permissions and try enabling the device again.",
-            );
-          }}
-          onDisconnected={() => {
-            setSession(null);
-            setLeft(true);
-          }}
-        >
-          <ConsultationPresence audience={audience} />
-          <CallContent />
-        </LiveKitRoom>
-      ) : (
-        <div className="consultation-lobby">
-          <span className="consultation-symbol" aria-hidden="true">
-            +
-          </span>
-
-          <h2>
-            {left ? "You have left the call" : "Ready for your consultation?"}
-          </h2>
-
-          <p className="muted">
-            Joining is available from 10 minutes before your appointment until
-            its scheduled end.
-          </p>
-
-          <fieldset className="consultation-options" disabled={busy}>
-            <legend>Device settings</legend>
-
-            <label>
-              <input
-                type="checkbox"
-                checked={microphoneEnabled}
-                onChange={(event) => setMicrophoneEnabled(event.target.checked)}
-              />
-              Enable microphone when joining
-            </label>
-
-            <label>
-              <input
-                type="checkbox"
-                checked={cameraEnabled}
-                onChange={(event) => setCameraEnabled(event.target.checked)}
-              />
-              Enable camera when joining
-            </label>
-          </fieldset>
-
-          <button
-            type="button"
-            className="primary-button"
-            disabled={busy}
-            onClick={join}
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 shadow-sm">
+          <LiveKitRoom
+            data-lk-theme="default"
+            serverUrl={session.serverUrl}
+            token={session.token}
+            connect
+            audio={microphoneEnabled}
+            video={cameraEnabled}
+            className="flex! h-[clamp(420px,72dvh,850px)]! min-h-0 flex-col! bg-slate-950"
+            onError={() => {
+              setError(
+                "A call error occurred. Check your connection and device permissions.",
+              );
+            }}
+            onMediaDeviceFailure={() => {
+              setError(
+                "Camera or microphone access failed. Check browser permissions and try enabling the device again.",
+              );
+            }}
+            onDisconnected={() => {
+              setSession(null);
+              setLeft(true);
+            }}
           >
-            {busy
-              ? "Joining..."
-              : left
-                ? "Rejoin consultation"
-                : "Join consultation"}
-          </button>
-
-          <p className="muted">
-            You can turn your camera and microphone on or off during the call.
+            <ConsultationPresence audience={audience} />
+            <CallContent />
+          </LiveKitRoom>
+          <p className="border-t border-slate-800 px-4 py-3 text-xs leading-6 text-slate-300">
+            Camera and microphone can be changed during the call. Leave
+            disconnects only you.
           </p>
+        </div>
+      ) : (
+        <div className="grid overflow-hidden rounded-3xl border border-slate-200 bg-white lg:grid-cols-[1fr_1.1fr]">
+          <div className="relative overflow-hidden bg-slate-900 p-6 text-white sm:p-8">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-16 -bottom-16 size-64 rounded-full border-[36px] border-white/5"
+            />
+            <div className="relative">
+              <span
+                aria-hidden="true"
+                className="grid size-14 place-items-center rounded-2xl bg-teal-800 text-3xl text-white"
+              >
+                +
+              </span>
+              <p className="mt-7 text-[10px] font-bold tracking-[0.18em] text-teal-200">
+                CONSULTATION LOBBY
+              </p>
+              <h2 className="mt-4 text-2xl font-semibold leading-tight tracking-tight text-white">
+                {left
+                  ? "You have left the call"
+                  : "Ready for your consultation?"}
+              </h2>
+              <p className="mt-4 text-sm leading-7 text-slate-300">
+                {left
+                  ? "You can request to rejoin while this consultation is open and its joining window is available."
+                  : "Choose your device settings, then join your scheduled consultation."}
+              </p>
+              <p className="mt-6 border-t border-white/10 pt-5 text-xs leading-6 text-slate-400">
+                Joining opens 10 minutes before your appointment and closes at
+                its scheduled end.
+              </p>
+            </div>
+          </div>
+          <div className="p-6 sm:p-8">
+            <p className="text-base font-semibold text-slate-950">
+              Before you join
+            </p>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Find a quiet place and allow browser access if you choose to
+              enable your camera or microphone.
+            </p>
+            <fieldset
+              disabled={busy}
+              className="mt-6 grid min-w-0 gap-3 border-0 p-0"
+            >
+              <legend className="mb-3 text-xs font-semibold text-slate-600">
+                Device settings
+              </legend>
+              <label
+                className={`flex min-h-20 items-center gap-3 rounded-xl border p-4 ${microphoneEnabled ? "border-teal-700 bg-teal-50" : "border-slate-200 bg-white"} ${busy ? "cursor-wait opacity-60" : "cursor-pointer"}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={microphoneEnabled}
+                  onChange={(event) =>
+                    setMicrophoneEnabled(event.target.checked)
+                  }
+                  className="size-4 shrink-0 accent-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-slate-900">
+                    Enable microphone when joining
+                  </span>
+                  <span className="mt-1 block text-xs leading-5 text-slate-500">
+                    {microphoneEnabled
+                      ? "Microphone requested on entry."
+                      : "Start muted and turn it on during the call."}
+                  </span>
+                </span>
+              </label>
+              <label
+                className={`flex min-h-20 items-center gap-3 rounded-xl border p-4 ${cameraEnabled ? "border-teal-700 bg-teal-50" : "border-slate-200 bg-white"} ${busy ? "cursor-wait opacity-60" : "cursor-pointer"}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={cameraEnabled}
+                  onChange={(event) => setCameraEnabled(event.target.checked)}
+                  className="size-4 shrink-0 accent-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-slate-900">
+                    Enable camera when joining
+                  </span>
+                  <span className="mt-1 block text-xs leading-5 text-slate-500">
+                    {cameraEnabled
+                      ? "Camera requested on entry."
+                      : "Start with camera off and enable it when ready."}
+                  </span>
+                </span>
+              </label>
+            </fieldset>
+            <button
+              type="button"
+              className={`${primaryButton} mt-6 w-full`}
+              disabled={busy}
+              onClick={join}
+            >
+              {busy
+                ? "Joining…"
+                : left
+                  ? "Rejoin consultation"
+                  : "Join consultation"}
+            </button>
+            <p className="mt-4 text-center text-xs leading-6 text-slate-500">
+              Your selected settings apply when the room connects.
+            </p>
+          </div>
         </div>
       )}
     </section>

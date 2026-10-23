@@ -116,6 +116,13 @@ const slotReasons: Record<string, string> = {
   ALL_SLOTS_BOOKED: "All remaining slots are booked.",
 };
 
+const bookingPrimary =
+  "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-teal-800 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50";
+const bookingSecondary =
+  "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50";
+const bookingInput =
+  "mt-2 block min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-normal text-slate-900 focus:border-teal-700 focus:outline-2 focus:outline-offset-2 focus:outline-teal-700 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500";
+
 /* Reusable directory picker. Searches run only when submitted. */
 function DirectoryPicker<T extends { id: string }>({
   title,
@@ -176,105 +183,128 @@ function DirectoryPicker<T extends { id: string }>({
   const items = result?.items.filter((item) => !eligible || eligible(item));
 
   return (
-    <section className="panel booking-section">
-      <h2>{title}</h2>
-
+    <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+      <h2 className="text-lg font-semibold tracking-tight text-slate-950">
+        {title}
+      </h2>
+      <p className="mt-2 text-xs leading-5 text-slate-500">
+        {searchable
+          ? "Find the correct patient and verify their record before selecting."
+          : "Load the directory and select an active doctor. Only eligible doctors are shown."}
+      </p>
       <form
-        className="booking-picker-toolbar"
+        className="mt-5 flex flex-wrap items-end gap-3"
         onSubmit={(event) => {
           event.preventDefault();
           void load(1, search.trim());
         }}
       >
         {searchable && (
-          <label className="form-field">
-            <span>Search by MRN, patient name or phone</span>
+          <label className="min-w-0 flex-[1_1_240px] text-xs font-semibold text-slate-600">
+            Patient name, MRN or phone
             <input
               value={search}
               maxLength={100}
               disabled={disabled || loading}
+              className={bookingInput}
+              placeholder="Enter patient details"
               onChange={(event) => setSearch(event.target.value)}
             />
           </label>
         )}
-
         <button
           type="submit"
-          className="secondary-button"
+          className={bookingSecondary}
           disabled={disabled || loading}
         >
           {loading
-            ? "Loading..."
+            ? "Loading…"
             : searchable
               ? "Search patients"
               : "Load doctors"}
         </button>
       </form>
-
       {error && (
-        <p className="form-error" role="alert">
+        <p
+          className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm leading-6 text-red-800"
+          role="alert"
+        >
           {error}
         </p>
       )}
-
+      {!result && !loading && (
+        <p className="mt-5 rounded-xl border border-dashed border-slate-200 px-4 py-6 text-center text-sm leading-6 text-slate-500">
+          {searchable
+            ? "Search above to load patient records."
+            : "Select Load doctors to view the directory."}
+        </p>
+      )}
+      {loading && (
+        <p role="status" className="mt-4 text-sm text-slate-500">
+          Loading directory…
+        </p>
+      )}
       {result && (
         <>
-          <ul className="booking-picker-list">
+          <ul
+            className="mt-5 grid max-h-[420px] list-none gap-2 overflow-y-auto p-1"
+            aria-label={`${title} results`}
+          >
             {items?.map((item) => (
               <li key={item.id}>
                 <button
                   type="button"
-                  className="booking-picker-option"
+                  className={`flex min-h-16 w-full cursor-pointer items-start justify-between gap-3 rounded-xl border p-4 text-left text-sm leading-6 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-60 ${selectedId === item.id ? "border-teal-700 bg-teal-50 text-teal-950 ring-1 ring-inset ring-teal-700" : "border-slate-200 bg-white text-slate-700 hover:border-teal-300 hover:bg-slate-50"}`}
                   aria-pressed={selectedId === item.id}
                   disabled={disabled || loading}
                   onClick={() => onSelect(item)}
                 >
-                  {label(item)}
+                  <span className="min-w-0 break-words">{label(item)}</span>
                   {selectedId === item.id && (
-                    <span className="booking-selected-label">Selected</span>
+                    <span className="shrink-0 rounded-full bg-teal-800 px-2 py-0.5 text-[10px] font-semibold text-white">
+                      Selected
+                    </span>
                   )}
                 </button>
               </li>
             ))}
           </ul>
-
           {items?.length === 0 && (
-            <p className="muted">
+            <p className="mt-4 text-sm leading-6 text-slate-500">
               No eligible results on this page. Try another search or page.
             </p>
           )}
-
-          <div className="booking-picker-toolbar">
-            <button
-              type="button"
-              className="secondary-button"
-              disabled={disabled || loading || result.pagination.page <= 1}
-              onClick={() =>
-                void load(result.pagination.page - 1, appliedSearch)
-              }
-            >
-              Previous
-            </button>
-
-            <span className="muted">
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+            <p className="text-xs tabular-nums text-slate-500">
               Page {result.pagination.page} of{" "}
               {Math.max(1, result.pagination.totalPages)}
-            </span>
-
-            <button
-              type="button"
-              className="secondary-button"
-              disabled={
-                disabled ||
-                loading ||
-                result.pagination.page >= result.pagination.totalPages
-              }
-              onClick={() =>
-                void load(result.pagination.page + 1, appliedSearch)
-              }
-            >
-              Next
-            </button>
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className={bookingSecondary}
+                disabled={disabled || loading || result.pagination.page <= 1}
+                onClick={() =>
+                  void load(result.pagination.page - 1, appliedSearch)
+                }
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                className={bookingSecondary}
+                disabled={
+                  disabled ||
+                  loading ||
+                  result.pagination.page >= result.pagination.totalPages
+                }
+                onClick={() =>
+                  void load(result.pagination.page + 1, appliedSearch)
+                }
+              >
+                Next
+              </button>
+            </div>
           </div>
         </>
       )}
@@ -492,291 +522,490 @@ export default function AppointmentBookingWorkspace() {
     }
   }
 
+  const readyToBook = Boolean(
+    patient && doctor && availability && selectedSlot && !pending,
+  );
+
   if (!allowed) {
     return (
-      <section className="panel">
-        <h1>Access unavailable</h1>
-        <p>Your account cannot create appointments.</p>
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
+        <h1 className="text-2xl font-bold text-slate-950">
+          Access unavailable
+        </h1>
+        <p className="mt-3 text-sm leading-6 text-slate-600">
+          Your account cannot create appointments.
+        </p>
       </section>
     );
   }
 
   return (
-    <div className="booking-workspace">
-      <header className="page-heading">
-        <div>
-          <p className="eyebrow">Patient visits</p>
-          <h1>Book an appointment</h1>
-          <p className="muted">
-            Select a patient, doctor, and consultation slot. All times are in
-            India Standard Time.
+    <div className="min-w-0 space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-5">
+        <div className="max-w-2xl">
+          <p className="text-[11px] font-bold tracking-[0.18em] text-teal-800">
+            PATIENT VISITS
+          </p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+            Book an appointment
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            Select a patient, choose a doctor and reserve a consultation slot.
           </p>
         </div>
-
-        <Link href="/appointments" className="secondary-button">
-          View appointments
+        <Link href="/appointments" className={bookingSecondary}>
+          <span aria-hidden="true">←</span>View appointments
         </Link>
       </header>
 
-      <div aria-live="polite">
-        {error && (
-          <p className="form-error" role="alert">
-            {error}
-          </p>
-        )}
-        {loading && <p role="status">Loading consultation slots...</p>}
-        {submitting && <p role="status">Checking booking result...</p>}
-      </div>
+      <ol
+        aria-label="Booking preparation"
+        className="grid list-none grid-cols-2 gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:grid-cols-4 sm:p-5"
+      >
+        {[
+          { label: "Select patient", done: Boolean(patient) },
+          { label: "Select doctor", done: Boolean(doctor) },
+          {
+            label: "Choose visit",
+            done: Boolean(selectedSlot && availability),
+          },
+          { label: "Review and book", done: Boolean(confirmation) },
+        ].map((step, index) => (
+          <li key={step.label} className="flex items-center gap-2.5">
+            <span
+              aria-hidden="true"
+              className={`grid size-8 shrink-0 place-items-center rounded-full text-xs font-bold ${step.done ? "bg-teal-800 text-white" : "bg-slate-100 text-slate-500"}`}
+            >
+              {step.done ? "✓" : index + 1}
+            </span>
+            <span
+              className={`text-xs font-semibold ${step.done ? "text-teal-900" : "text-slate-600"}`}
+            >
+              {step.label}
+              <span className="sr-only">
+                {step.done ? ", ready" : ", not yet complete"}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ol>
+
+      {error && (
+        <p
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-800"
+          role="alert"
+        >
+          {error}
+        </p>
+      )}
+      {loading && (
+        <p role="status" className="text-sm text-slate-600">
+          Loading consultation slots…
+        </p>
+      )}
+      {submitting && (
+        <p role="status" className="text-sm text-slate-600">
+          Checking booking result. Keep this page open…
+        </p>
+      )}
 
       {confirmation && (
-        <section className="panel booking-confirmation" role="status">
-          <h2>
+        <section
+          className="rounded-2xl border border-teal-200 bg-teal-50 p-5 sm:p-6"
+          role="status"
+        >
+          <h2 className="text-lg font-semibold text-teal-950">
             {confirmation.appointment.status === "BOOKED"
               ? "Appointment confirmed"
               : "Original appointment is cancelled"}
           </h2>
-          <p>
-            Reference: <strong>{confirmation.appointment.id}</strong>
-          </p>
-          <p>
+          <p className="mt-2 text-sm font-medium text-teal-900">
             {appointmentFormatter.format(
               new Date(confirmation.appointment.startsAt),
-            )}
+            )}{" "}
+            IST
+          </p>
+          <p className="mt-3 break-all text-xs leading-5 text-teal-900">
+            Reference: {confirmation.appointment.id}
           </p>
           {confirmation.replayed && (
-            <p className="muted">
+            <p className="mt-3 text-sm leading-6 text-teal-900">
               The existing appointment was returned. No duplicate booking was
               created.
             </p>
           )}
-          <Link href="/appointments" className="text-link">
-            Open appointment list
+          <Link
+            href="/appointments"
+            className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-teal-950 underline underline-offset-4"
+          >
+            Open appointment list <span aria-hidden="true">→</span>
           </Link>
         </section>
       )}
 
       {pending ? (
-        <section className="panel">
-          <h2>Check pending booking</h2>
-          <p>Keep this request unchanged until its result is confirmed.</p>
-          <dl className="booking-summary">
-            <dt>Patient ID</dt>
-            <dd>{pending.body.patientId}</dd>
-            <dt>Doctor ID</dt>
-            <dd>{pending.body.doctorId}</dd>
-            <dt>Date</dt>
-            <dd>{pending.body.date}</dd>
-            <dt>Time</dt>
-            <dd>
-              {String(Math.floor(pending.body.startMinute / 60)).padStart(
-                2,
-                "0",
-              )}
-              :{String(pending.body.startMinute % 60).padStart(2, "0")}
-            </dd>
-            <dt>Mode</dt>
-            <dd>
-              {pending.body.mode === "ONLINE"
-                ? "Online consultation"
-                : "In-person visit"}
-            </dd>
+        <section
+          aria-labelledby="pending-title"
+          className="rounded-2xl border border-amber-300 bg-amber-50 p-5 sm:p-6"
+        >
+          <h2
+            id="pending-title"
+            className="text-lg font-semibold text-amber-950"
+          >
+            Check pending booking
+          </h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-amber-900">
+            This request is waiting for a confirmed result. Keep its details
+            unchanged and retry the same booking. A retry uses the original
+            request.
+          </p>
+          <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-3">
+            <div>
+              <dt className="text-xs text-amber-900">Date</dt>
+              <dd className="mt-1 font-semibold text-amber-950">
+                {pending.body.date}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-amber-900">Time · IST</dt>
+              <dd className="mt-1 font-semibold tabular-nums text-amber-950">
+                {String(Math.floor(pending.body.startMinute / 60)).padStart(
+                  2,
+                  "0",
+                )}
+                :{String(pending.body.startMinute % 60).padStart(2, "0")}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-amber-900">Visit mode</dt>
+              <dd className="mt-1 font-semibold text-amber-950">
+                {pending.body.mode === "ONLINE"
+                  ? "Online consultation"
+                  : "In-person visit"}
+              </dd>
+            </div>
           </dl>
-
+          <details className="mt-4 text-xs text-amber-950">
+            <summary className="cursor-pointer py-2 font-semibold">
+              Saved patient and doctor references
+            </summary>
+            <dl className="mt-2 grid gap-3 sm:grid-cols-2">
+              <div>
+                <dt>Patient ID</dt>
+                <dd className="mt-1 break-all">{pending.body.patientId}</dd>
+              </div>
+              <div>
+                <dt>Doctor ID</dt>
+                <dd className="mt-1 break-all">{pending.body.doctorId}</dd>
+              </div>
+            </dl>
+          </details>
           <button
             type="button"
-            className="primary-button"
+            className={`${bookingPrimary} mt-4`}
             disabled={submitting}
             onClick={() => void sendBooking(pending)}
           >
-            {submitting ? "Checking..." : "Retry same booking"}
+            {submitting ? "Checking…" : "Retry same booking"}
           </button>
         </section>
       ) : (
-        <button
-          type="button"
-          className="secondary-button booking-recovery"
-          disabled={loading || submitting}
-          onClick={restorePending}
-        >
-          Restore pending booking
-        </button>
-      )}
-      <section className="panel">
-        <label className="form-field">
-          <span>Appointment mode</span>
-          <select
-            value={appointmentMode}
-            disabled={frozen}
-            onChange={(event) => {
-              setAppointmentMode(event.target.value as "IN_PERSON" | "ONLINE");
-              setConfirmation(null);
-              setError("");
-            }}
+        <details className="rounded-xl border border-slate-200 bg-white px-5 py-2">
+          <summary className="cursor-pointer py-3 text-sm font-medium text-slate-600">
+            Recover a previous booking request
+          </summary>
+          <p className="mb-3 max-w-2xl text-xs leading-5 text-slate-500">
+            If a previous attempt lost its connection or response, restore the
+            saved request from this browser tab before starting another booking.
+          </p>
+          <button
+            type="button"
+            className={`${bookingSecondary} mb-3`}
+            disabled={loading || submitting}
+            onClick={restorePending}
           >
-            <option value="IN_PERSON">In-person visit</option>
-            <option value="ONLINE">Online consultation</option>
-          </select>
-        </label>
+            Restore pending booking
+          </button>
+        </details>
+      )}
 
-        <p className="muted">
-          Online appointments are being prepared for video consultations. Call
-          joining is not enabled yet.
-        </p>
-      </section>
-      <div className="booking-picker-grid">
-        <DirectoryPicker<Patient>
-          title="1. Select patient"
-          endpoint="/patients"
-          searchable
-          disabled={frozen}
-          selectedId={patient?.id}
-          label={(item) =>
-            `${item.mrn} · ${item.fullName} · ${item.phone || "No phone"}`
-          }
-          onSelect={(item) => {
-            setPatient(item);
-            setConfirmation(null);
-            setError("");
-          }}
-        />
-
-        <DirectoryPicker<Doctor>
-          title="2. Select doctor"
-          endpoint="/doctors"
-          disabled={frozen}
-          selectedId={doctor?.id}
-          eligible={(item) => item.isActive && item.department.isActive}
-          label={(item) =>
-            `${item.displayName} · ${item.specialty} · ${item.department.name}`
-          }
-          onSelect={(item) => {
-            setDoctor(item);
-            invalidateSlots();
-          }}
-        />
-      </div>
-
-      <section className="panel booking-section">
-        <h2>3. Choose a date and slot</h2>
-
-        <form
-          className="booking-picker-toolbar"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void loadSlots();
-          }}
-        >
-          <label className="form-field">
-            <span>Consultation date</span>
-            <input
-              type="date"
-              required
-              value={date}
+      <div className="grid min-w-0 items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0 space-y-6">
+          <div className="grid min-w-0 items-start gap-5 xl:grid-cols-2">
+            <DirectoryPicker<Patient>
+              title="1. Select patient"
+              endpoint="/patients"
+              searchable
               disabled={frozen}
-              onChange={(event) => {
-                setDate(event.target.value);
+              selectedId={patient?.id}
+              label={(item) =>
+                `${item.mrn} · ${item.fullName} · ${item.phone || "No phone"}`
+              }
+              onSelect={(item) => {
+                setPatient(item);
+                setConfirmation(null);
+                setError("");
+              }}
+            />
+            <DirectoryPicker<Doctor>
+              title="2. Select doctor"
+              endpoint="/doctors"
+              disabled={frozen}
+              selectedId={doctor?.id}
+              eligible={(item) => item.isActive && item.department.isActive}
+              label={(item) =>
+                `${item.displayName} · ${item.specialty} · ${item.department.name}`
+              }
+              onSelect={(item) => {
+                setDoctor(item);
                 invalidateSlots();
               }}
             />
-          </label>
+          </div>
 
-          <button
-            type="button"
-            className="secondary-button"
-            disabled={frozen}
-            onClick={() => {
-              setDate(todayInHospital());
-              invalidateSlots();
-            }}
+          <section
+            aria-labelledby="visit-title"
+            className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6"
           >
-            Today
-          </button>
-
-          <button
-            type="submit"
-            className="primary-button"
-            disabled={frozen || !doctor || !date}
-          >
-            Load available slots
-          </button>
-        </form>
-
-        {!doctor && <p className="muted">Select a doctor to load slots.</p>}
-
-        {availability && (
-          <>
-            <p className="muted">
-              {slotReasons[availability.reason] ?? "No slots are available."}
-            </p>
-
-            <div className="booking-slot-grid">
-              {availability.slots.map((slot) => (
-                <button
-                  key={slot.startsAt}
-                  type="button"
-                  className="booking-slot"
-                  aria-pressed={selectedSlot?.startsAt === slot.startsAt}
-                  disabled={frozen}
-                  onClick={() => {
-                    setSelectedSlot(slot);
-                    setConfirmation(null);
-                    setError("");
-                  }}
-                >
-                  <strong>
-                    {slot.localStart} – {slot.localEnd}
-                  </strong>
-                  <span>{slot.durationMinutes} minutes</span>
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2
+                id="visit-title"
+                className="text-lg font-semibold tracking-tight text-slate-950"
+              >
+                3. Choose your visit
+              </h2>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                All times in IST
+              </span>
             </div>
-          </>
-        )}
-      </section>
+            <fieldset disabled={frozen} className="mt-5 min-w-0 border-0 p-0">
+              <legend className="text-xs font-semibold text-slate-600">
+                Appointment mode
+              </legend>
+              <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                {(
+                  [
+                    {
+                      value: "IN_PERSON",
+                      title: "In-person visit",
+                      detail: "Consultation at the hospital.",
+                    },
+                    {
+                      value: "ONLINE",
+                      title: "Online consultation",
+                      detail: "Doctor and patient connect by video or audio.",
+                    },
+                  ] as const
+                ).map((mode) => (
+                  <label
+                    key={mode.value}
+                    className={`flex min-w-0 items-start gap-3 rounded-xl border p-4 ${appointmentMode === mode.value ? "border-teal-700 bg-teal-50" : "border-slate-200 bg-white"} ${frozen ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+                  >
+                    <input
+                      type="radio"
+                      name="appointment-mode"
+                      value={mode.value}
+                      checked={appointmentMode === mode.value}
+                      disabled={frozen}
+                      onChange={() => {
+                        setAppointmentMode(mode.value);
+                        setConfirmation(null);
+                        setError("");
+                      }}
+                      className="mt-1 size-4 shrink-0 accent-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
+                    />
+                    <span>
+                      <span className="block text-sm font-semibold text-slate-900">
+                        {mode.title}
+                      </span>
+                      <span className="mt-1 block text-xs leading-5 text-slate-500">
+                        {mode.detail}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <form
+              className="mt-6 flex flex-wrap items-end gap-3 border-t border-slate-100 pt-5"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void loadSlots();
+              }}
+            >
+              <label className="min-w-0 flex-[1_1_200px] text-xs font-semibold text-slate-600">
+                Consultation date
+                <input
+                  type="date"
+                  required
+                  value={date}
+                  disabled={frozen}
+                  className={bookingInput}
+                  onChange={(event) => {
+                    setDate(event.target.value);
+                    invalidateSlots();
+                  }}
+                />
+              </label>
+              <button
+                type="button"
+                className={bookingSecondary}
+                disabled={frozen}
+                onClick={() => {
+                  setDate(todayInHospital());
+                  invalidateSlots();
+                }}
+              >
+                Today
+              </button>
+              <button
+                type="submit"
+                className={bookingPrimary}
+                disabled={frozen || !doctor || !date}
+              >
+                Load available slots
+              </button>
+            </form>
+            {!doctor && (
+              <p className="mt-4 text-xs leading-5 text-slate-500">
+                Select a doctor before loading available slots.
+              </p>
+            )}
+            {!availability && !loading && doctor && (
+              <p className="mt-4 text-xs leading-5 text-slate-500">
+                Choose a date, then load the doctor’s available times.
+              </p>
+            )}
+            {availability && (
+              <div className="mt-6 border-t border-slate-100 pt-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p role="status" className="text-sm text-slate-600">
+                    {slotReasons[availability.reason] ??
+                      "No slots are available."}
+                  </p>
+                  <span className="text-xs tabular-nums text-slate-500">
+                    {availability.slots.length} available
+                  </span>
+                </div>
+                <div className="mt-4 grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:grid-cols-3 xl:grid-cols-4">
+                  {availability.slots.map((slot) => (
+                    <button
+                      key={slot.startsAt}
+                      type="button"
+                      className={`min-h-20 cursor-pointer rounded-xl border p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-60 ${selectedSlot?.startsAt === slot.startsAt ? "border-teal-700 bg-teal-50 text-teal-950 ring-1 ring-inset ring-teal-700" : "border-slate-200 bg-white text-slate-700 hover:border-teal-300 hover:bg-slate-50"}`}
+                      aria-pressed={selectedSlot?.startsAt === slot.startsAt}
+                      disabled={frozen}
+                      onClick={() => {
+                        setSelectedSlot(slot);
+                        setConfirmation(null);
+                        setError("");
+                      }}
+                    >
+                      <strong className="block text-xs tabular-nums">
+                        {slot.localStart} – {slot.localEnd}
+                      </strong>
+                      <span className="mt-2 block text-xs text-slate-500">
+                        {slot.durationMinutes} min
+                        {selectedSlot?.startsAt === slot.startsAt
+                          ? " · Selected"
+                          : ""}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
 
-      {patient && doctor && availability && selectedSlot && !pending && (
-        <section className="panel booking-section">
-          <h2>4. Confirm appointment</h2>
-
-          <dl className="booking-summary">
-            <dt>Patient</dt>
-            <dd>
-              {patient.fullName}
-              <br />
-              <span className="muted">{patient.phone || "No phone"}</span>
-            </dd>
-            <dt>Patient ID</dt>
-            <dd>{patient.id}</dd>
-            <dt>Doctor</dt>
-            <dd>{doctor.displayName}</dd>
-            <dt>Date</dt>
-            <dd>{availability.date}</dd>
-            <dt>Time</dt>
-            <dd>
-              {selectedSlot.localStart} – {selectedSlot.localEnd} IST
-            </dd>
-            <dt>Mode</dt>
-            <dd>
-              {appointmentMode === "ONLINE"
-                ? "Online consultation"
-                : "In-person visit"}
-            </dd>
-          </dl>
-
-          <p className="muted">
-            Availability is checked again when you confirm.
+        <aside
+          aria-labelledby="review-title"
+          className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 2xl:sticky 2xl:top-6"
+        >
+          <p className="text-[10px] font-bold tracking-[0.16em] text-teal-800">
+            BOOKING SUMMARY
           </p>
-
-          <button
-            type="button"
-            className="primary-button"
-            disabled={frozen}
-            onClick={() => void confirmBooking()}
+          <h2
+            id="review-title"
+            className="mt-2 text-lg font-semibold tracking-tight text-slate-950"
           >
-            Confirm booking
-          </button>
-        </section>
-      )}
+            4. Review and book
+          </h2>
+          {pending ? (
+            <p className="mt-4 text-sm leading-6 text-amber-900">
+              A saved request is pending. Use its recovery panel above to check
+              the result.
+            </p>
+          ) : (
+            <>
+              <dl className="mt-5 divide-y divide-slate-100 text-sm">
+                <div className="pb-4">
+                  <dt className="text-xs text-slate-500">Patient</dt>
+                  <dd className="mt-1 break-words font-semibold text-slate-900">
+                    {patient?.fullName || "Select a patient"}
+                  </dd>
+                  {patient && (
+                    <dd className="mt-1 text-xs leading-5 text-slate-500">
+                      {patient.mrn} · {patient.phone || "No phone"}
+                    </dd>
+                  )}
+                </div>
+                <div className="py-4">
+                  <dt className="text-xs text-slate-500">Doctor</dt>
+                  <dd className="mt-1 break-words font-semibold text-slate-900">
+                    {doctor?.displayName || "Select a doctor"}
+                  </dd>
+                  {doctor && (
+                    <dd className="mt-1 break-words text-xs leading-5 text-slate-500">
+                      {doctor.department.name}
+                    </dd>
+                  )}
+                </div>
+                <div className="py-4">
+                  <dt className="text-xs text-slate-500">Consultation date</dt>
+                  <dd className="mt-1 font-medium text-slate-900">
+                    {availability?.date || date || "Choose a date"}
+                  </dd>
+                </div>
+                <div className="py-4">
+                  <dt className="text-xs text-slate-500">Time · IST</dt>
+                  <dd className="mt-1 font-medium tabular-nums text-slate-900">
+                    {selectedSlot
+                      ? `${selectedSlot.localStart} – ${selectedSlot.localEnd}`
+                      : "Select a slot"}
+                  </dd>
+                </div>
+                <div className="py-4">
+                  <dt className="text-xs text-slate-500">Mode</dt>
+                  <dd className="mt-1 font-medium text-slate-900">
+                    {appointmentMode === "ONLINE"
+                      ? "Online consultation"
+                      : "In-person visit"}
+                  </dd>
+                </div>
+              </dl>
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                {confirmation
+                  ? "The result is shown above. Select a new slot to prepare another booking."
+                  : "Review the patient and visit details. Availability is checked again when you confirm."}
+              </p>
+              <button
+                type="button"
+                className={`${bookingPrimary} mt-5 w-full`}
+                disabled={frozen || !readyToBook}
+                onClick={() => void confirmBooking()}
+              >
+                Confirm booking
+              </button>
+              {!readyToBook && !confirmation && (
+                <p className="mt-3 text-xs leading-5 text-slate-500">
+                  Select a patient, doctor and slot to continue.
+                </p>
+              )}
+            </>
+          )}
+        </aside>
+      </div>
     </div>
   );
 }

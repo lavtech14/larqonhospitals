@@ -140,24 +140,35 @@ export default function AvailabilityWorkspace({
 
   if (!canRead) {
     return (
-      <section className="panel registration-panel">
-        <h1>Access unavailable</h1>
-        <p className="muted">Your account cannot view doctor availability.</p>
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+          Access unavailable
+        </h1>
+        <p className="mt-2 text-sm leading-6 text-slate-500">
+          Your account cannot view doctor availability.
+        </p>
       </section>
     );
   }
 
   return (
-    <>
-      <Link className="text-link" href="/doctors">
+    <div className="min-w-0 space-y-5">
+      <Link
+        className="inline-flex min-h-11 items-center rounded-lg text-sm font-semibold text-teal-800 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
+        href="/doctors"
+      >
         Back to doctors
       </Link>
 
-      <section className="page-heading patient-detail-heading">
+      <section className="mt-5 mb-6 flex flex-wrap items-end justify-between gap-5">
         <div>
-          <p className="eyebrow">DOCTOR SCHEDULING</p>
-          <h1>Weekly availability</h1>
-          <p className="muted">
+          <p className="mb-2 text-[10px] font-bold tracking-[0.16em] text-teal-800">
+            DOCTOR SCHEDULING
+          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+            Weekly availability
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500">
             Hospital timezone: Asia/Kolkata. Use 24-hour times such as 09:00 and
             17:30.
           </p>
@@ -165,14 +176,17 @@ export default function AvailabilityWorkspace({
       </section>
 
       {!loaded ? (
-        <section className="panel registration-panel">
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
           {error ? (
             <>
-              <p className="form-error" role="alert">
+              <p
+                className="my-4 text-sm leading-6 text-red-700 empty:hidden"
+                role="alert"
+              >
                 {error}
               </p>
               <button
-                className="secondary-button"
+                className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                 type="button"
                 onClick={reloadLatest}
               >
@@ -190,7 +204,7 @@ export default function AvailabilityWorkspace({
           reloadLatest={reloadLatest}
         />
       )}
-    </>
+    </div>
   );
 }
 
@@ -289,31 +303,46 @@ function AvailabilityEditor({
   }
 
   return (
-    <section className="panel registration-panel">
-      <h2>Working windows and breaks</h2>
-      <p className="muted">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+      <h2 className="text-lg font-semibold tracking-tight text-slate-950">
+        Working windows and breaks
+      </h2>
+      <p className="mt-2 text-sm leading-6 text-slate-500">
         Add separate windows for split shifts. Saving replaces the complete
         weekly template. An empty template means no recurring availability.
       </p>
 
-      <p className="success-message" role="status">
+      <p
+        className="my-4 text-sm leading-6 text-teal-800 empty:hidden"
+        role="status"
+      >
         {message}
       </p>
 
       <form onSubmit={save} aria-busy={saving}>
-        <fieldset className="patient-fields" disabled={saving || !canManage}>
+        <fieldset
+          className="m-0 min-w-0 border-0 p-0 disabled:opacity-70"
+          disabled={saving || !canManage}
+        >
           <legend className="sr-only">Weekly availability settings</legend>
 
           {windows.length === 0 && (
-            <p className="patient-feedback">No working windows configured.</p>
+            <p className="px-5 py-12 text-center text-sm text-slate-500">
+              No working windows configured.
+            </p>
           )}
 
           {windows.map((window, index) => (
-            <section className="availability-window" key={window.key}>
-              <h3>Working window {index + 1}</h3>
+            <section
+              className="mt-6 rounded-2xl border border-slate-200 bg-slate-50/50 p-4 sm:p-5 [&>h3]:mb-5"
+              key={window.key}
+            >
+              <h3 className="text-sm font-semibold text-slate-900">
+                Working window {index + 1}
+              </h3>
 
-              <div className="availability-grid">
-                <div className="form-field">
+              <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="block min-w-0 text-xs font-semibold text-slate-600 [&>label]:block [&>span]:block [&>input]:mt-2 [&>input]:block [&>input]:min-h-12 [&>input]:w-full [&>input]:min-w-0 [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:bg-white [&>input]:px-3 [&>input]:py-2 [&>input]:text-sm [&>input]:font-normal [&>input]:text-slate-900 [&>input:disabled]:bg-slate-50 [&>select]:mt-2 [&>select]:block [&>select]:min-h-12 [&>select]:w-full [&>select]:min-w-0 [&>select]:rounded-xl [&>select]:border [&>select]:border-slate-300 [&>select]:bg-white [&>select]:px-3 [&>select]:py-2 [&>select]:text-sm [&>select]:font-normal [&>select]:text-slate-900 [&>select:disabled]:bg-slate-50 [&>input:focus-visible]:outline-2 [&>input:focus-visible]:outline-offset-2 [&>input:focus-visible]:outline-teal-700 [&>select:focus-visible]:outline-2 [&>select:focus-visible]:outline-offset-2 [&>select:focus-visible]:outline-teal-700">
                   <label htmlFor={`${window.key}-day`}>Day</label>
                   <select
                     id={`${window.key}-day`}
@@ -330,7 +359,7 @@ function AvailabilityEditor({
                   </select>
                 </div>
 
-                <div className="form-field">
+                <div className="block min-w-0 text-xs font-semibold text-slate-600 [&>label]:block [&>span]:block [&>input]:mt-2 [&>input]:block [&>input]:min-h-12 [&>input]:w-full [&>input]:min-w-0 [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:bg-white [&>input]:px-3 [&>input]:py-2 [&>input]:text-sm [&>input]:font-normal [&>input]:text-slate-900 [&>input:disabled]:bg-slate-50 [&>select]:mt-2 [&>select]:block [&>select]:min-h-12 [&>select]:w-full [&>select]:min-w-0 [&>select]:rounded-xl [&>select]:border [&>select]:border-slate-300 [&>select]:bg-white [&>select]:px-3 [&>select]:py-2 [&>select]:text-sm [&>select]:font-normal [&>select]:text-slate-900 [&>select:disabled]:bg-slate-50 [&>input:focus-visible]:outline-2 [&>input:focus-visible]:outline-offset-2 [&>input:focus-visible]:outline-teal-700 [&>select:focus-visible]:outline-2 [&>select:focus-visible]:outline-offset-2 [&>select:focus-visible]:outline-teal-700">
                   <label htmlFor={`${window.key}-start`}>Start (HH:mm)</label>
                   <input
                     id={`${window.key}-start`}
@@ -344,7 +373,7 @@ function AvailabilityEditor({
                   />
                 </div>
 
-                <div className="form-field">
+                <div className="block min-w-0 text-xs font-semibold text-slate-600 [&>label]:block [&>span]:block [&>input]:mt-2 [&>input]:block [&>input]:min-h-12 [&>input]:w-full [&>input]:min-w-0 [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:bg-white [&>input]:px-3 [&>input]:py-2 [&>input]:text-sm [&>input]:font-normal [&>input]:text-slate-900 [&>input:disabled]:bg-slate-50 [&>select]:mt-2 [&>select]:block [&>select]:min-h-12 [&>select]:w-full [&>select]:min-w-0 [&>select]:rounded-xl [&>select]:border [&>select]:border-slate-300 [&>select]:bg-white [&>select]:px-3 [&>select]:py-2 [&>select]:text-sm [&>select]:font-normal [&>select]:text-slate-900 [&>select:disabled]:bg-slate-50 [&>input:focus-visible]:outline-2 [&>input:focus-visible]:outline-offset-2 [&>input:focus-visible]:outline-teal-700 [&>select:focus-visible]:outline-2 [&>select:focus-visible]:outline-offset-2 [&>select:focus-visible]:outline-teal-700">
                   <label htmlFor={`${window.key}-end`}>End (HH:mm)</label>
                   <input
                     id={`${window.key}-end`}
@@ -358,7 +387,7 @@ function AvailabilityEditor({
                   />
                 </div>
 
-                <div className="form-field">
+                <div className="block min-w-0 text-xs font-semibold text-slate-600 [&>label]:block [&>span]:block [&>input]:mt-2 [&>input]:block [&>input]:min-h-12 [&>input]:w-full [&>input]:min-w-0 [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:bg-white [&>input]:px-3 [&>input]:py-2 [&>input]:text-sm [&>input]:font-normal [&>input]:text-slate-900 [&>input:disabled]:bg-slate-50 [&>select]:mt-2 [&>select]:block [&>select]:min-h-12 [&>select]:w-full [&>select]:min-w-0 [&>select]:rounded-xl [&>select]:border [&>select]:border-slate-300 [&>select]:bg-white [&>select]:px-3 [&>select]:py-2 [&>select]:text-sm [&>select]:font-normal [&>select]:text-slate-900 [&>select:disabled]:bg-slate-50 [&>input:focus-visible]:outline-2 [&>input:focus-visible]:outline-offset-2 [&>input:focus-visible]:outline-teal-700 [&>select:focus-visible]:outline-2 [&>select:focus-visible]:outline-offset-2 [&>select:focus-visible]:outline-teal-700">
                   <label htmlFor={`${window.key}-slot`}>Slot minutes</label>
                   <input
                     id={`${window.key}-slot`}
@@ -376,8 +405,11 @@ function AvailabilityEditor({
               </div>
 
               {window.breaks.map((pause, breakIndex) => (
-                <div className="availability-break" key={pause.key}>
-                  <div className="form-field">
+                <div
+                  className="mt-5 grid min-w-0 items-end gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+                  key={pause.key}
+                >
+                  <div className="block min-w-0 text-xs font-semibold text-slate-600 [&>label]:block [&>span]:block [&>input]:mt-2 [&>input]:block [&>input]:min-h-12 [&>input]:w-full [&>input]:min-w-0 [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:bg-white [&>input]:px-3 [&>input]:py-2 [&>input]:text-sm [&>input]:font-normal [&>input]:text-slate-900 [&>input:disabled]:bg-slate-50 [&>select]:mt-2 [&>select]:block [&>select]:min-h-12 [&>select]:w-full [&>select]:min-w-0 [&>select]:rounded-xl [&>select]:border [&>select]:border-slate-300 [&>select]:bg-white [&>select]:px-3 [&>select]:py-2 [&>select]:text-sm [&>select]:font-normal [&>select]:text-slate-900 [&>select:disabled]:bg-slate-50 [&>input:focus-visible]:outline-2 [&>input:focus-visible]:outline-offset-2 [&>input:focus-visible]:outline-teal-700 [&>select:focus-visible]:outline-2 [&>select:focus-visible]:outline-offset-2 [&>select:focus-visible]:outline-teal-700">
                     <label htmlFor={`${pause.key}-start`}>
                       Break {breakIndex + 1} start
                     </label>
@@ -395,7 +427,7 @@ function AvailabilityEditor({
                     />
                   </div>
 
-                  <div className="form-field">
+                  <div className="block min-w-0 text-xs font-semibold text-slate-600 [&>label]:block [&>span]:block [&>input]:mt-2 [&>input]:block [&>input]:min-h-12 [&>input]:w-full [&>input]:min-w-0 [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:bg-white [&>input]:px-3 [&>input]:py-2 [&>input]:text-sm [&>input]:font-normal [&>input]:text-slate-900 [&>input:disabled]:bg-slate-50 [&>select]:mt-2 [&>select]:block [&>select]:min-h-12 [&>select]:w-full [&>select]:min-w-0 [&>select]:rounded-xl [&>select]:border [&>select]:border-slate-300 [&>select]:bg-white [&>select]:px-3 [&>select]:py-2 [&>select]:text-sm [&>select]:font-normal [&>select]:text-slate-900 [&>select:disabled]:bg-slate-50 [&>input:focus-visible]:outline-2 [&>input:focus-visible]:outline-offset-2 [&>input:focus-visible]:outline-teal-700 [&>select:focus-visible]:outline-2 [&>select:focus-visible]:outline-offset-2 [&>select:focus-visible]:outline-teal-700">
                     <label htmlFor={`${pause.key}-end`}>Break end</label>
                     <input
                       id={`${pause.key}-end`}
@@ -413,7 +445,7 @@ function AvailabilityEditor({
 
                   {canManage && (
                     <button
-                      className="secondary-button"
+                      className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                       type="button"
                       onClick={() =>
                         changeWindow(window.key, {
@@ -430,9 +462,9 @@ function AvailabilityEditor({
               ))}
 
               {canManage && (
-                <div className="form-actions">
+                <div className="mt-5 flex flex-wrap items-center gap-3">
                   <button
-                    className="secondary-button"
+                    className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                     type="button"
                     disabled={window.breaks.length >= 8}
                     onClick={() =>
@@ -452,7 +484,7 @@ function AvailabilityEditor({
                   </button>
 
                   <button
-                    className="secondary-button"
+                    className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                     type="button"
                     onClick={() => {
                       setWindows((current) =>
@@ -469,9 +501,9 @@ function AvailabilityEditor({
           ))}
 
           {canManage && (
-            <div className="form-actions">
+            <div className="mt-5 flex flex-wrap items-center gap-3">
               <button
-                className="secondary-button"
+                className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                 type="button"
                 disabled={windows.length >= 28}
                 onClick={() => {
@@ -493,7 +525,7 @@ function AvailabilityEditor({
               </button>
 
               <button
-                className="primary-button"
+                className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-teal-800 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                 type="submit"
                 disabled={conflict}
               >
@@ -503,18 +535,21 @@ function AvailabilityEditor({
           )}
         </fieldset>
 
-        <p className="form-error" role="alert">
+        <p
+          className="my-4 text-sm leading-6 text-red-700 empty:hidden"
+          role="alert"
+        >
           {error}
         </p>
 
         {conflict && (
-          <div className="conflict-notice">
+          <div className="mt-5 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-950 [&>button]:mt-4">
             <p>
               Availability changed elsewhere. Your edits remain visible. Review
               or copy them before loading the latest template.
             </p>
             <button
-              className="secondary-button"
+              className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
               type="button"
               onClick={reloadLatest}
             >
@@ -524,7 +559,7 @@ function AvailabilityEditor({
         )}
       </form>
 
-      <p className="preview-note">
+      <p className="mt-5 text-xs leading-6 text-slate-500">
         Version {version}. Times are in {initial.timeZone}. End-of-day may be
         entered as 24:00. This template does not book or cancel appointments.
       </p>

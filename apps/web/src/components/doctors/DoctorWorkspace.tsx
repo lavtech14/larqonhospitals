@@ -300,9 +300,13 @@ export default function DoctorWorkspace() {
 
   if (!canRead) {
     return (
-      <section className="panel registration-panel">
-        <h1>Access unavailable</h1>
-        <p className="muted">Your account cannot view the doctor directory.</p>
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+          Access unavailable
+        </h1>
+        <p className="mt-2 text-sm leading-6 text-slate-500">
+          Your account cannot view the doctor directory.
+        </p>
       </section>
     );
   }
@@ -311,19 +315,23 @@ export default function DoctorWorkspace() {
   const listControlsDisabled = busy || editor !== null || loading;
 
   return (
-    <>
-      <section className="page-heading">
+    <div className="min-w-0 space-y-6">
+      <section className="mb-6 flex flex-wrap items-end justify-between gap-5">
         <div>
-          <p className="eyebrow">HOSPITAL DIRECTORY</p>
-          <h1>Doctors</h1>
-          <p className="muted">
+          <p className="mb-2 text-[10px] font-bold tracking-[0.16em] text-teal-800">
+            HOSPITAL DIRECTORY
+          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+            Doctors
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500">
             Manage doctor profiles and their primary departments.
           </p>
         </div>
 
         {canManage && !editor && (
           <button
-            className="primary-button"
+            className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-teal-800 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
             type="button"
             disabled={
               loading || opening || !departments.some((d) => d.isActive)
@@ -340,21 +348,29 @@ export default function DoctorWorkspace() {
         )}
       </section>
 
-      <p className="success-message" role="status">
+      <p
+        className="my-4 text-sm leading-6 text-teal-800 empty:hidden"
+        role="status"
+      >
         {opening ? "Loading profile..." : message}
       </p>
 
       {!editor && error && (
-        <p className="form-error" role="alert">
+        <p
+          className="my-4 text-sm leading-6 text-red-700 empty:hidden"
+          role="alert"
+        >
           {error}
         </p>
       )}
 
       {editor && canManage && (
-        <section className="panel registration-panel">
-          <h2>{editor.mode === "create" ? "Add doctor" : "Edit doctor"}</h2>
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+          <h2 className="text-lg font-semibold tracking-tight text-slate-950">
+            {editor.mode === "create" ? "Add doctor" : "Edit doctor"}
+          </h2>
 
-          <p className="muted">
+          <p className="mt-2 text-sm leading-6 text-slate-500">
             Profile creation does not create a login or verify professional
             credentials.
           </p>
@@ -364,12 +380,18 @@ export default function DoctorWorkspace() {
             onSubmit={save}
             aria-busy={saving}
           >
-            <fieldset className="patient-fields" disabled={saving}>
+            <fieldset
+              className="m-0 min-w-0 border-0 p-0 disabled:opacity-70"
+              disabled={saving}
+            >
               <legend className="sr-only">Doctor profile details</legend>
 
-              <div className="form-grid">
+              <div className="mt-5 grid min-w-0 gap-5 sm:grid-cols-2">
                 {fields.map((field) => (
-                  <div className="form-field" key={field.name}>
+                  <div
+                    className="block min-w-0 text-xs font-semibold text-slate-600 [&>label]:block [&>span]:block [&>input]:mt-2 [&>input]:block [&>input]:min-h-12 [&>input]:w-full [&>input]:min-w-0 [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:bg-white [&>input]:px-3 [&>input]:py-2 [&>input]:text-sm [&>input]:font-normal [&>input]:text-slate-900 [&>input:disabled]:bg-slate-50 [&>select]:mt-2 [&>select]:block [&>select]:min-h-12 [&>select]:w-full [&>select]:min-w-0 [&>select]:rounded-xl [&>select]:border [&>select]:border-slate-300 [&>select]:bg-white [&>select]:px-3 [&>select]:py-2 [&>select]:text-sm [&>select]:font-normal [&>select]:text-slate-900 [&>select:disabled]:bg-slate-50 [&>input:focus-visible]:outline-2 [&>input:focus-visible]:outline-offset-2 [&>input:focus-visible]:outline-teal-700 [&>select:focus-visible]:outline-2 [&>select:focus-visible]:outline-offset-2 [&>select:focus-visible]:outline-teal-700"
+                    key={field.name}
+                  >
                     <label htmlFor={`doctor-${field.name}`}>
                       {field.label}
                       {field.required ? " *" : ""}
@@ -389,7 +411,7 @@ export default function DoctorWorkspace() {
                   </div>
                 ))}
 
-                <div className="form-field">
+                <div className="block min-w-0 text-xs font-semibold text-slate-600 [&>label]:block [&>span]:block [&>input]:mt-2 [&>input]:block [&>input]:min-h-12 [&>input]:w-full [&>input]:min-w-0 [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:bg-white [&>input]:px-3 [&>input]:py-2 [&>input]:text-sm [&>input]:font-normal [&>input]:text-slate-900 [&>input:disabled]:bg-slate-50 [&>select]:mt-2 [&>select]:block [&>select]:min-h-12 [&>select]:w-full [&>select]:min-w-0 [&>select]:rounded-xl [&>select]:border [&>select]:border-slate-300 [&>select]:bg-white [&>select]:px-3 [&>select]:py-2 [&>select]:text-sm [&>select]:font-normal [&>select]:text-slate-900 [&>select:disabled]:bg-slate-50 [&>input:focus-visible]:outline-2 [&>input:focus-visible]:outline-offset-2 [&>input:focus-visible]:outline-teal-700 [&>select:focus-visible]:outline-2 [&>select:focus-visible]:outline-offset-2 [&>select:focus-visible]:outline-teal-700">
                   <label htmlFor="doctor-department">
                     Primary department *
                   </label>
@@ -437,12 +459,12 @@ export default function DoctorWorkspace() {
                   disabled={saving || conflict}
                 />
               ) : (
-                <p className="muted">
+                <p className="mt-2 text-sm leading-6 text-slate-500">
                   Staff-account linking requires staff-directory access.
                 </p>
               )}
               {editor.mode === "edit" && (
-                <label className="department-active">
+                <label className="mt-5 flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-4 text-sm font-medium text-slate-700 [&>input]:size-4 [&>input]:accent-teal-800">
                   <input
                     type="checkbox"
                     name="isActive"
@@ -452,19 +474,22 @@ export default function DoctorWorkspace() {
                 </label>
               )}
 
-              <p className="form-error" role="alert">
+              <p
+                className="my-4 text-sm leading-6 text-red-700 empty:hidden"
+                role="alert"
+              >
                 {error}
               </p>
 
               {conflict && (
-                <div className="conflict-notice">
+                <div className="mt-5 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-950 [&>button]:mt-4">
                   <p>
                     Saving is paused. Your edits remain visible. Review or copy
                     them before discarding the form and reopening the latest
                     profile.
                   </p>
                   <button
-                    className="secondary-button"
+                    className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                     type="button"
                     onClick={() => {
                       closeEditor();
@@ -476,16 +501,16 @@ export default function DoctorWorkspace() {
                 </div>
               )}
 
-              <div className="form-actions">
+              <div className="mt-5 flex flex-wrap items-center gap-3">
                 <button
-                  className="primary-button"
+                  className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-teal-800 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                   type="submit"
                   disabled={conflict}
                 >
                   {saving ? "Saving..." : "Save doctor"}
                 </button>
                 <button
-                  className="secondary-button"
+                  className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                   type="button"
                   onClick={closeEditor}
                 >
@@ -497,11 +522,19 @@ export default function DoctorWorkspace() {
         </section>
       )}
 
-      <section className="panel" aria-labelledby="doctor-directory-title">
-        <div className="panel-heading">
+      <section
+        className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6"
+        aria-labelledby="doctor-directory-title"
+      >
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 id="doctor-directory-title">Doctor directory</h2>
-            <p className="muted" role="status">
+            <h2
+              id="doctor-directory-title"
+              className="text-lg font-semibold tracking-tight text-slate-950"
+            >
+              Doctor directory
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500" role="status">
               {loading
                 ? "Loading..."
                 : doctors
@@ -511,7 +544,7 @@ export default function DoctorWorkspace() {
           </div>
         </div>
 
-        <div className="patient-search form-field">
+        <div className="mb-5 max-w-md block min-w-0 text-xs font-semibold text-slate-600 [&>label]:block [&>span]:block [&>input]:mt-2 [&>input]:block [&>input]:min-h-12 [&>input]:w-full [&>input]:min-w-0 [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:bg-white [&>input]:px-3 [&>input]:py-2 [&>input]:text-sm [&>input]:font-normal [&>input]:text-slate-900 [&>input:disabled]:bg-slate-50 [&>select]:mt-2 [&>select]:block [&>select]:min-h-12 [&>select]:w-full [&>select]:min-w-0 [&>select]:rounded-xl [&>select]:border [&>select]:border-slate-300 [&>select]:bg-white [&>select]:px-3 [&>select]:py-2 [&>select]:text-sm [&>select]:font-normal [&>select]:text-slate-900 [&>select:disabled]:bg-slate-50 [&>input:focus-visible]:outline-2 [&>input:focus-visible]:outline-offset-2 [&>input:focus-visible]:outline-teal-700 [&>select:focus-visible]:outline-2 [&>select:focus-visible]:outline-offset-2 [&>select:focus-visible]:outline-teal-700">
           <label htmlFor="doctor-filter">Filter by department</label>
           <select
             id="doctor-filter"
@@ -533,14 +566,19 @@ export default function DoctorWorkspace() {
         </div>
 
         {loading ? (
-          <p className="patient-feedback">Loading doctor profiles...</p>
+          <p className="px-5 py-12 text-center text-sm text-slate-500">
+            Loading doctor profiles...
+          </p>
         ) : current?.error ? (
-          <div className="empty-state">
-            <p className="form-error" role="alert">
+          <div className="px-5 py-12 text-center [&>button]:mt-4">
+            <p
+              className="my-4 text-sm leading-6 text-red-700 empty:hidden"
+              role="alert"
+            >
               {current.error}
             </p>
             <button
-              className="secondary-button"
+              className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
               type="button"
               onClick={() => setReload((value) => value + 1)}
             >
@@ -548,59 +586,175 @@ export default function DoctorWorkspace() {
             </button>
           </div>
         ) : !doctors?.items.length ? (
-          <div className="empty-state">
-            <h3>No matching doctors</h3>
-            <p className="muted">
+          <div className="px-5 py-12 text-center [&>button]:mt-4">
+            <h3 className="text-sm font-semibold text-slate-900">
+              No matching doctors
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
               An administrator can create profiles after adding an active
               department.
             </p>
           </div>
         ) : (
           <>
+            <ul
+              className="mb-5 grid list-none gap-4 sm:grid-cols-2 lg:hidden"
+              aria-label="Doctor profiles"
+            >
+              {doctors.items.map((doctor) => (
+                <li
+                  key={doctor.id}
+                  className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="break-words text-base font-semibold text-slate-950">
+                        {doctor.displayName}
+                      </h3>
+                      <p className="mt-1 break-words text-xs leading-5 text-slate-500">
+                        {doctor.specialty}
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${doctor.isActive ? "bg-teal-50 text-teal-900" : "bg-slate-100 text-slate-600"}`}
+                    >
+                      {doctor.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                  <p className="mt-4 text-xs text-slate-500">
+                    Primary department
+                  </p>
+                  <p className="mt-1 break-words text-sm font-medium text-slate-800">
+                    {doctor.department.name}
+                  </p>
+                  {!doctor.department.isActive && (
+                    <p className="mt-1 text-xs text-amber-800">
+                      Department inactive
+                    </p>
+                  )}
+                  <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
+                    {canManage && (
+                      <button
+                        type="button"
+                        className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled={editor !== null || busy}
+                        aria-label={`Edit ${doctor.displayName}`}
+                        onClick={() => void openEdit(doctor.id)}
+                      >
+                        Edit
+                      </button>
+                    )}
+                    {canViewAvailability && (
+                      <>
+                        <Link
+                          href={`/doctors/${doctor.id}/availability`}
+                          prefetch={false}
+                          className="inline-flex min-h-11 items-center text-sm font-semibold text-teal-800 hover:underline"
+                        >
+                          Schedule
+                          <span className="sr-only">
+                            {" "}
+                            for {doctor.displayName}
+                          </span>
+                        </Link>
+                        <Link
+                          href={`/doctors/${doctor.id}/calendar`}
+                          prefetch={false}
+                          className="inline-flex min-h-11 items-center text-sm font-semibold text-teal-800 hover:underline"
+                        >
+                          Calendar
+                          <span className="sr-only">
+                            {" "}
+                            for {doctor.displayName}
+                          </span>
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
             <div
-              className="table-scroll"
+              className="hidden overflow-x-auto rounded-xl border border-slate-200 lg:block"
               role="region"
               aria-label="Doctor directory"
               tabIndex={0}
             >
-              <table>
-                <thead>
+              <table className="w-full min-w-[820px] border-collapse text-left">
+                <caption className="sr-only">
+                  Doctor profiles with department, status and available
+                  management actions
+                </caption>
+                <thead className="bg-slate-50">
                   <tr>
-                    <th scope="col">Doctor</th>
-                    <th scope="col">Department</th>
-                    <th scope="col">Status</th>
-                    {canManage && <th scope="col">Action</th>}
-                    {canViewAvailability && <th scope="col">Availability</th>}
+                    <th
+                      scope="col"
+                      className="border-b border-slate-200 px-5 py-3.5 text-[11px] font-semibold tracking-wide text-slate-500"
+                    >
+                      Doctor
+                    </th>
+                    <th
+                      scope="col"
+                      className="border-b border-slate-200 px-5 py-3.5 text-[11px] font-semibold tracking-wide text-slate-500"
+                    >
+                      Department
+                    </th>
+                    <th
+                      scope="col"
+                      className="border-b border-slate-200 px-5 py-3.5 text-[11px] font-semibold tracking-wide text-slate-500"
+                    >
+                      Status
+                    </th>
+                    {canManage && (
+                      <th
+                        scope="col"
+                        className="border-b border-slate-200 px-5 py-3.5 text-[11px] font-semibold tracking-wide text-slate-500"
+                      >
+                        Action
+                      </th>
+                    )}
+                    {canViewAvailability && (
+                      <th
+                        scope="col"
+                        className="border-b border-slate-200 px-5 py-3.5 text-[11px] font-semibold tracking-wide text-slate-500"
+                      >
+                        Availability
+                      </th>
+                    )}
                   </tr>
                 </thead>
 
-                <tbody>
+                <tbody className="divide-y divide-slate-100">
                   {doctors.items.map((doctor) => (
                     <tr key={doctor.id}>
-                      <th scope="row">
-                        <span className="patient-name">
+                      <th scope="row" className="max-w-60 px-5 py-5 align-top">
+                        <span className="block break-words text-sm font-semibold text-slate-900">
                           {doctor.displayName}
                         </span>
-                        <span className="record-id">{doctor.specialty}</span>
+                        <span className="mt-1 block break-words text-xs leading-5 text-slate-500">
+                          {doctor.specialty}
+                        </span>
                       </th>
-                      <td>
+                      <td className="max-w-64 break-words px-5 py-5 align-top text-sm text-slate-600">
                         {doctor.department.name}
                         {!doctor.department.isActive && (
-                          <span className="record-id">Department inactive</span>
+                          <span className="mt-1 block break-words text-xs leading-5 text-slate-500">
+                            Department inactive
+                          </span>
                         )}
                       </td>
-                      <td>
+                      <td className="max-w-64 break-words px-5 py-5 align-top text-sm text-slate-600">
                         <span
-                          className={`status ${doctor.isActive ? "completed" : "inactive"}`}
+                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${doctor.isActive ? "bg-teal-50 text-teal-900" : "bg-slate-100 text-slate-600"}`}
                         >
                           {doctor.isActive ? "Active" : "Inactive"}
                         </span>
                       </td>
 
                       {canManage && (
-                        <td>
+                        <td className="max-w-64 break-words px-5 py-5 align-top text-sm text-slate-600">
                           <button
-                            className="secondary-button"
+                            className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                             type="button"
                             disabled={editor !== null || busy}
                             aria-label={`Edit ${doctor.displayName}`}
@@ -611,9 +765,9 @@ export default function DoctorWorkspace() {
                         </td>
                       )}
                       {canViewAvailability && (
-                        <td>
+                        <td className="max-w-64 break-words px-5 py-5 align-top text-sm text-slate-600">
                           <Link
-                            className="text-link"
+                            className="inline-flex min-h-11 items-center rounded-lg text-sm font-semibold text-teal-800 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
                             href={`/doctors/${doctor.id}/availability`}
                             prefetch={false}
                           >
@@ -621,10 +775,15 @@ export default function DoctorWorkspace() {
                           </Link>
                           {user.permissions?.includes("availability.read") && (
                             <>
-                              {" | "}
+                              <span
+                                aria-hidden="true"
+                                className="mx-2 text-slate-300"
+                              >
+                                /
+                              </span>
                               <Link
                                 href={`/doctors/${doctor.id}/calendar`}
-                                className="text-link"
+                                className="inline-flex min-h-11 items-center rounded-lg text-sm font-semibold text-teal-800 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
                                 prefetch={false}
                               >
                                 Calendar
@@ -639,14 +798,14 @@ export default function DoctorWorkspace() {
               </table>
             </div>
 
-            <div className="pagination-bar">
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-5 text-xs tabular-nums text-slate-500">
               <span>
                 Page {doctors.pagination.page} of{" "}
                 {Math.max(1, doctors.pagination.totalPages)}
               </span>
-              <div className="pagination-actions">
+              <div className="flex flex-wrap gap-2">
                 <button
-                  className="secondary-button"
+                  className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                   type="button"
                   disabled={listControlsDisabled || page <= 1}
                   onClick={() => setPage((value) => value - 1)}
@@ -654,7 +813,7 @@ export default function DoctorWorkspace() {
                   Previous
                 </button>
                 <button
-                  className="secondary-button"
+                  className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                   type="button"
                   disabled={
                     listControlsDisabled ||
@@ -669,6 +828,6 @@ export default function DoctorWorkspace() {
           </>
         )}
       </section>
-    </>
+    </div>
   );
 }

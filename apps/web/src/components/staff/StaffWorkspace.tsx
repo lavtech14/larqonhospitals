@@ -186,28 +186,45 @@ export default function StaffWorkspace() {
 
   if (!canRead) {
     return (
-      <section className="panel">
-        <h1>Access unavailable</h1>
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+          Access unavailable
+        </h1>
         <p>Your account cannot view staff administration.</p>
       </section>
     );
   }
 
   return (
-    <div className="staff-workspace">
-      <header className="page-heading">
+    <div className="min-w-0 space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-5">
         <div>
-          <p className="eyebrow">Administration</p>
-          <h1>Staff accounts</h1>
-          <p className="muted">
+          <p className="mb-2 text-[11px] font-bold tracking-[0.18em] text-teal-800">
+            Administration
+          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+            Staff accounts
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500">
             Create hospital staff accounts and review assigned roles.
           </p>
         </div>
       </header>
 
       {canManage && (
-        <section className="panel">
-          <h2>Create staff account</h2>
+        <details className="group rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+          <summary className="flex min-h-12 cursor-pointer list-none flex-wrap items-center justify-between gap-3 rounded-xl text-base font-semibold text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 [&::-webkit-details-marker]:hidden">
+            <span>
+              Create staff account
+              <span className="mt-1 block text-xs font-normal leading-5 text-slate-500">
+                Set up a staff login, role and address.
+              </span>
+            </span>
+            <span className="rounded-xl bg-teal-800 px-4 py-3 text-sm font-semibold text-white">
+              <span className="group-open:hidden">+ Add staff</span>
+              <span className="hidden group-open:inline">Close form</span>
+            </span>
+          </summary>
 
           <form
             onSubmit={(event) => {
@@ -215,11 +232,16 @@ export default function StaffWorkspace() {
               void createAccount();
             }}
           >
-            <fieldset className="staff-form-fieldset" disabled={busy}>
-              <legend className="muted">Account details</legend>
+            <fieldset
+              className="mt-5 min-w-0 rounded-xl border border-slate-200 p-4 sm:p-5 disabled:opacity-70 [&>legend]:px-2 [&>legend]:text-sm [&>legend]:font-semibold [&>legend]:text-slate-900"
+              disabled={busy}
+            >
+              <legend className="mt-2 text-sm leading-6 text-slate-500">
+                Account details
+              </legend>
 
-              <div className="staff-form-grid">
-                <label className="form-field">
+              <div className="mt-3 grid min-w-0 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                <label className="block min-w-0 text-xs font-semibold text-slate-600 [&>span]:block [&>input]:mt-2 [&>input]:block [&>input]:min-h-12 [&>input]:w-full [&>input]:min-w-0 [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:bg-white [&>input]:px-3 [&>input]:py-2 [&>input]:text-sm [&>input]:font-normal [&>input]:text-slate-900 [&>input:disabled]:bg-slate-50 [&>select]:mt-2 [&>select]:block [&>select]:min-h-12 [&>select]:w-full [&>select]:min-w-0 [&>select]:rounded-xl [&>select]:border [&>select]:border-slate-300 [&>select]:bg-white [&>select]:px-3 [&>select]:py-2 [&>select]:text-sm [&>select]:font-normal [&>select]:text-slate-900 [&>select:disabled]:bg-slate-50 [&>input:focus-visible]:outline-2 [&>input:focus-visible]:outline-offset-2 [&>input:focus-visible]:outline-teal-700 [&>select:focus-visible]:outline-2 [&>select:focus-visible]:outline-offset-2 [&>select:focus-visible]:outline-teal-700">
                   <span>Full name</span>
                   <input
                     required
@@ -236,7 +258,7 @@ export default function StaffWorkspace() {
                   />
                 </label>
 
-                <label className="form-field">
+                <label className="block min-w-0 text-xs font-semibold text-slate-600 [&>span]:block [&>input]:mt-2 [&>input]:block [&>input]:min-h-12 [&>input]:w-full [&>input]:min-w-0 [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:bg-white [&>input]:px-3 [&>input]:py-2 [&>input]:text-sm [&>input]:font-normal [&>input]:text-slate-900 [&>input:disabled]:bg-slate-50 [&>select]:mt-2 [&>select]:block [&>select]:min-h-12 [&>select]:w-full [&>select]:min-w-0 [&>select]:rounded-xl [&>select]:border [&>select]:border-slate-300 [&>select]:bg-white [&>select]:px-3 [&>select]:py-2 [&>select]:text-sm [&>select]:font-normal [&>select]:text-slate-900 [&>select:disabled]:bg-slate-50 [&>input:focus-visible]:outline-2 [&>input:focus-visible]:outline-offset-2 [&>input:focus-visible]:outline-teal-700 [&>select:focus-visible]:outline-2 [&>select:focus-visible]:outline-offset-2 [&>select:focus-visible]:outline-teal-700">
                   <span>Email</span>
                   <input
                     type="email"
@@ -253,7 +275,7 @@ export default function StaffWorkspace() {
                   />
                 </label>
 
-                <label className="form-field">
+                <label className="block min-w-0 text-xs font-semibold text-slate-600 [&>span]:block [&>input]:mt-2 [&>input]:block [&>input]:min-h-12 [&>input]:w-full [&>input]:min-w-0 [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:bg-white [&>input]:px-3 [&>input]:py-2 [&>input]:text-sm [&>input]:font-normal [&>input]:text-slate-900 [&>input:disabled]:bg-slate-50 [&>select]:mt-2 [&>select]:block [&>select]:min-h-12 [&>select]:w-full [&>select]:min-w-0 [&>select]:rounded-xl [&>select]:border [&>select]:border-slate-300 [&>select]:bg-white [&>select]:px-3 [&>select]:py-2 [&>select]:text-sm [&>select]:font-normal [&>select]:text-slate-900 [&>select:disabled]:bg-slate-50 [&>input:focus-visible]:outline-2 [&>input:focus-visible]:outline-offset-2 [&>input:focus-visible]:outline-teal-700 [&>select:focus-visible]:outline-2 [&>select:focus-visible]:outline-offset-2 [&>select:focus-visible]:outline-teal-700">
                   <span>Role</span>
                   <select
                     value={form.role}
@@ -272,7 +294,7 @@ export default function StaffWorkspace() {
                   </select>
                 </label>
 
-                <label className="form-field">
+                <label className="block min-w-0 text-xs font-semibold text-slate-600 [&>span]:block [&>input]:mt-2 [&>input]:block [&>input]:min-h-12 [&>input]:w-full [&>input]:min-w-0 [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:bg-white [&>input]:px-3 [&>input]:py-2 [&>input]:text-sm [&>input]:font-normal [&>input]:text-slate-900 [&>input:disabled]:bg-slate-50 [&>select]:mt-2 [&>select]:block [&>select]:min-h-12 [&>select]:w-full [&>select]:min-w-0 [&>select]:rounded-xl [&>select]:border [&>select]:border-slate-300 [&>select]:bg-white [&>select]:px-3 [&>select]:py-2 [&>select]:text-sm [&>select]:font-normal [&>select]:text-slate-900 [&>select:disabled]:bg-slate-50 [&>input:focus-visible]:outline-2 [&>input:focus-visible]:outline-offset-2 [&>input:focus-visible]:outline-teal-700 [&>select:focus-visible]:outline-2 [&>select:focus-visible]:outline-offset-2 [&>select:focus-visible]:outline-teal-700">
                   <span>Temporary password</span>
                   <input
                     type="password"
@@ -292,18 +314,29 @@ export default function StaffWorkspace() {
                 </label>
               </div>
 
-              <p id="staff-password-help" className="muted">
+              <p
+                id="staff-password-help"
+                className="mt-2 text-sm leading-6 text-slate-500"
+              >
                 Use a unique password of 15–128 characters. The staff member
                 must change it at first login.
               </p>
             </fieldset>
 
-            <fieldset className="staff-form-fieldset" disabled={busy}>
-              <legend className="muted">Address</legend>
+            <fieldset
+              className="mt-5 min-w-0 rounded-xl border border-slate-200 p-4 sm:p-5 disabled:opacity-70 [&>legend]:px-2 [&>legend]:text-sm [&>legend]:font-semibold [&>legend]:text-slate-900"
+              disabled={busy}
+            >
+              <legend className="mt-2 text-sm leading-6 text-slate-500">
+                Address
+              </legend>
 
-              <div className="staff-form-grid">
+              <div className="mt-3 grid min-w-0 gap-5 sm:grid-cols-2 xl:grid-cols-3">
                 {addressFields.map((field) => (
-                  <label className="form-field" key={field.name}>
+                  <label
+                    className="block min-w-0 text-xs font-semibold text-slate-600 [&>span]:block [&>input]:mt-2 [&>input]:block [&>input]:min-h-12 [&>input]:w-full [&>input]:min-w-0 [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:bg-white [&>input]:px-3 [&>input]:py-2 [&>input]:text-sm [&>input]:font-normal [&>input]:text-slate-900 [&>input:disabled]:bg-slate-50 [&>select]:mt-2 [&>select]:block [&>select]:min-h-12 [&>select]:w-full [&>select]:min-w-0 [&>select]:rounded-xl [&>select]:border [&>select]:border-slate-300 [&>select]:bg-white [&>select]:px-3 [&>select]:py-2 [&>select]:text-sm [&>select]:font-normal [&>select]:text-slate-900 [&>select:disabled]:bg-slate-50 [&>input:focus-visible]:outline-2 [&>input:focus-visible]:outline-offset-2 [&>input:focus-visible]:outline-teal-700 [&>select:focus-visible]:outline-2 [&>select:focus-visible]:outline-offset-2 [&>select:focus-visible]:outline-teal-700"
+                    key={field.name}
+                  >
                     <span>{field.label}</span>
                     <input
                       value={form[field.name]}
@@ -328,13 +361,13 @@ export default function StaffWorkspace() {
               </div>
             </fieldset>
 
-            <p className="muted">
+            <p className="mt-2 text-sm leading-6 text-slate-500">
               Share the temporary password directly with the staff member. This
               page does not send an email.
             </p>
 
             {form.role === "ADMIN" && (
-              <p className="staff-admin-notice">
+              <p className="my-5 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
                 Administrator accounts can manage staff and hospital
                 configuration. Check the selected role before creating.
               </p>
@@ -342,25 +375,38 @@ export default function StaffWorkspace() {
 
             <div aria-live="polite">
               {createError && (
-                <p className="form-error" role="alert">
+                <p
+                  className="my-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-800"
+                  role="alert"
+                >
                   {createError}
                 </p>
               )}
-              {notice && <p className="success-message">{notice}</p>}
+              {notice && (
+                <p className="my-4 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-950">
+                  {notice}
+                </p>
+              )}
             </div>
 
-            <button type="submit" className="primary-button" disabled={busy}>
+            <button
+              type="submit"
+              className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-teal-800 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={busy}
+            >
               {creating ? "Creating account..." : "Create account"}
             </button>
           </form>
-        </section>
+        </details>
       )}
 
-      <section className="panel">
-        <h2>Staff directory</h2>
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+        <h2 className="text-lg font-semibold tracking-tight text-slate-950">
+          Staff directory
+        </h2>
 
         <form
-          className="staff-filter-bar"
+          className="mt-5 mb-5 grid min-w-0 items-end gap-4 border-b border-slate-100 pb-6 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
           onSubmit={(event) => {
             event.preventDefault();
             void load({
@@ -370,7 +416,7 @@ export default function StaffWorkspace() {
             });
           }}
         >
-          <label className="form-field">
+          <label className="block min-w-0 text-xs font-semibold text-slate-600 [&>span]:block [&>input]:mt-2 [&>input]:block [&>input]:min-h-12 [&>input]:w-full [&>input]:min-w-0 [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:bg-white [&>input]:px-3 [&>input]:py-2 [&>input]:text-sm [&>input]:font-normal [&>input]:text-slate-900 [&>input:disabled]:bg-slate-50 [&>select]:mt-2 [&>select]:block [&>select]:min-h-12 [&>select]:w-full [&>select]:min-w-0 [&>select]:rounded-xl [&>select]:border [&>select]:border-slate-300 [&>select]:bg-white [&>select]:px-3 [&>select]:py-2 [&>select]:text-sm [&>select]:font-normal [&>select]:text-slate-900 [&>select:disabled]:bg-slate-50 [&>input:focus-visible]:outline-2 [&>input:focus-visible]:outline-offset-2 [&>input:focus-visible]:outline-teal-700 [&>select:focus-visible]:outline-2 [&>select:focus-visible]:outline-offset-2 [&>select:focus-visible]:outline-teal-700">
             <span>Name or email</span>
             <input
               value={search}
@@ -380,7 +426,7 @@ export default function StaffWorkspace() {
             />
           </label>
 
-          <label className="form-field">
+          <label className="block min-w-0 text-xs font-semibold text-slate-600 [&>span]:block [&>input]:mt-2 [&>input]:block [&>input]:min-h-12 [&>input]:w-full [&>input]:min-w-0 [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:bg-white [&>input]:px-3 [&>input]:py-2 [&>input]:text-sm [&>input]:font-normal [&>input]:text-slate-900 [&>input:disabled]:bg-slate-50 [&>select]:mt-2 [&>select]:block [&>select]:min-h-12 [&>select]:w-full [&>select]:min-w-0 [&>select]:rounded-xl [&>select]:border [&>select]:border-slate-300 [&>select]:bg-white [&>select]:px-3 [&>select]:py-2 [&>select]:text-sm [&>select]:font-normal [&>select]:text-slate-900 [&>select:disabled]:bg-slate-50 [&>input:focus-visible]:outline-2 [&>input:focus-visible]:outline-offset-2 [&>input:focus-visible]:outline-teal-700 [&>select:focus-visible]:outline-2 [&>select:focus-visible]:outline-offset-2 [&>select:focus-visible]:outline-teal-700">
             <span>Role</span>
             <select
               value={role}
@@ -396,7 +442,7 @@ export default function StaffWorkspace() {
             </select>
           </label>
 
-          <label className="form-field">
+          <label className="block min-w-0 text-xs font-semibold text-slate-600 [&>span]:block [&>input]:mt-2 [&>input]:block [&>input]:min-h-12 [&>input]:w-full [&>input]:min-w-0 [&>input]:rounded-xl [&>input]:border [&>input]:border-slate-300 [&>input]:bg-white [&>input]:px-3 [&>input]:py-2 [&>input]:text-sm [&>input]:font-normal [&>input]:text-slate-900 [&>input:disabled]:bg-slate-50 [&>select]:mt-2 [&>select]:block [&>select]:min-h-12 [&>select]:w-full [&>select]:min-w-0 [&>select]:rounded-xl [&>select]:border [&>select]:border-slate-300 [&>select]:bg-white [&>select]:px-3 [&>select]:py-2 [&>select]:text-sm [&>select]:font-normal [&>select]:text-slate-900 [&>select:disabled]:bg-slate-50 [&>input:focus-visible]:outline-2 [&>input:focus-visible]:outline-offset-2 [&>input:focus-visible]:outline-teal-700 [&>select:focus-visible]:outline-2 [&>select:focus-visible]:outline-offset-2 [&>select:focus-visible]:outline-teal-700">
             <span>Status</span>
             <select
               value={status}
@@ -409,54 +455,175 @@ export default function StaffWorkspace() {
             </select>
           </label>
 
-          <button type="submit" className="secondary-button" disabled={busy}>
+          <button
+            type="submit"
+            className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={busy}
+          >
             {loading ? "Loading..." : "Search staff"}
           </button>
         </form>
 
+        {loading && (
+          <p role="status" className="my-4 text-sm text-slate-500">
+            Loading staff accounts…
+          </p>
+        )}
         {listError && (
-          <p className="form-error" role="alert">
+          <p
+            className="my-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-800"
+            role="alert"
+          >
             {listError}
           </p>
         )}
 
         {!result && !loading && (
-          <p className="muted">Select Search staff to load the directory.</p>
+          <p className="mt-2 text-sm leading-6 text-slate-500">
+            Select Search staff to load the directory.
+          </p>
         )}
 
         {result && (
           <>
-            <p className="muted" role="status">
+            <p className="mt-2 text-sm leading-6 text-slate-500" role="status">
               {result.pagination.total} matching accounts
             </p>
 
-            <div className="table-scroll">
-              <table className="staff-table" aria-busy={loading}>
-                <thead>
+            {result.items.length === 0 ? (
+              <p className="mt-5 rounded-xl border border-dashed border-slate-300 px-5 py-10 text-center text-sm text-slate-500 lg:hidden">
+                No matching staff accounts. Try another name, role or status.
+              </p>
+            ) : (
+              <ul
+                className="mt-5 grid list-none gap-4 sm:grid-cols-2 lg:hidden"
+                aria-label="Staff accounts"
+              >
+                {result.items.map((account) => (
+                  <li
+                    key={account.id}
+                    className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="break-words text-base font-semibold text-slate-950">
+                          {account.fullName}
+                        </h3>
+                        <p className="mt-1 break-all text-xs leading-5 text-slate-500">
+                          {account.email}
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${account.isActive ? "bg-teal-50 text-teal-900" : "bg-slate-100 text-slate-600"}`}
+                      >
+                        {account.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-1.5">
+                      {account.roles.map((item) => (
+                        <span
+                          key={item}
+                          className="rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-600"
+                        >
+                          {roleLabel(item)}
+                        </span>
+                      ))}
+                    </div>
+                    <dl className="mt-4 grid gap-4 border-t border-slate-100 pt-4">
+                      <div>
+                        <dt className="text-xs text-slate-500">
+                          Password status
+                        </dt>
+                        <dd className="mt-1 text-sm text-slate-700">
+                          {account.mustChangePassword
+                            ? "Password change required"
+                            : "Initial password changed"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs text-slate-500">
+                          Doctor profile
+                        </dt>
+                        <dd className="mt-1 break-words text-sm text-slate-700">
+                          {account.doctorProfile?.displayName ?? "Not linked"}
+                        </dd>
+                      </div>
+                    </dl>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="mt-5 hidden overflow-x-auto rounded-xl border border-slate-200 lg:block">
+              <table
+                className="w-full min-w-[850px] border-collapse text-left"
+                aria-busy={loading}
+              >
+                <caption className="sr-only">
+                  Staff account names, login emails, roles, status and linked
+                  doctor profiles
+                </caption>
+                <thead className="bg-slate-50">
                   <tr>
-                    <th scope="col">Staff member</th>
-                    <th scope="col">Roles</th>
-                    <th scope="col">Account</th>
-                    <th scope="col">Doctor profile</th>
+                    <th
+                      scope="col"
+                      className="border-b border-slate-200 px-5 py-3.5 text-[11px] font-semibold tracking-wide text-slate-500"
+                    >
+                      Staff member
+                    </th>
+                    <th
+                      scope="col"
+                      className="border-b border-slate-200 px-5 py-3.5 text-[11px] font-semibold tracking-wide text-slate-500"
+                    >
+                      Roles
+                    </th>
+                    <th
+                      scope="col"
+                      className="border-b border-slate-200 px-5 py-3.5 text-[11px] font-semibold tracking-wide text-slate-500"
+                    >
+                      Account
+                    </th>
+                    <th
+                      scope="col"
+                      className="border-b border-slate-200 px-5 py-3.5 text-[11px] font-semibold tracking-wide text-slate-500"
+                    >
+                      Doctor profile
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-100">
                   {result.items.map((account) => (
-                    <tr key={account.id}>
-                      <td>
+                    <tr key={account.id} className="hover:bg-slate-50/70">
+                      <td className="max-w-72 break-words px-5 py-5 align-top text-sm text-slate-700">
                         <strong>{account.fullName}</strong>
-                        <div className="muted">{account.email}</div>
+                        <div className="mt-2 text-sm leading-6 text-slate-500">
+                          {account.email}
+                        </div>
                       </td>
-                      <td>{account.roles.map(roleLabel).join(", ")}</td>
-                      <td>
-                        <div>{account.isActive ? "Active" : "Inactive"}</div>
+                      <td className="max-w-72 break-words px-5 py-5 align-top text-sm text-slate-700">
+                        <div className="flex flex-wrap gap-1.5">
+                          {account.roles.map((item) => (
+                            <span
+                              key={item}
+                              className="rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-600"
+                            >
+                              {roleLabel(item)}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="max-w-72 break-words px-5 py-5 align-top text-sm text-slate-700">
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${account.isActive ? "bg-teal-50 text-teal-900" : "bg-slate-100 text-slate-600"}`}
+                        >
+                          {account.isActive ? "Active" : "Inactive"}
+                        </span>
                         {account.mustChangePassword && (
-                          <span className="muted">
+                          <span className="mt-2 text-sm leading-6 text-slate-500">
                             Password change required
                           </span>
                         )}
                       </td>
-                      <td>
+                      <td className="max-w-72 break-words px-5 py-5 align-top text-sm text-slate-700">
                         {account.doctorProfile?.displayName ?? "Not linked"}
                       </td>
                     </tr>
@@ -464,31 +631,36 @@ export default function StaffWorkspace() {
 
                   {result.items.length === 0 && (
                     <tr>
-                      <td colSpan={4}>No matching staff accounts.</td>
+                      <td
+                        colSpan={4}
+                        className="px-5 py-10 text-center text-sm text-slate-500"
+                      >
+                        No matching staff accounts.
+                      </td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
 
-            <div className="staff-pagination">
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-5">
               <button
                 type="button"
-                className="secondary-button"
+                className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={busy || result.pagination.page <= 1}
                 onClick={() => void load(applied, result.pagination.page - 1)}
               >
                 Previous
               </button>
 
-              <span className="muted">
+              <span className="mt-2 text-sm leading-6 text-slate-500">
                 Page {result.pagination.page} of{" "}
                 {Math.max(1, result.pagination.totalPages)}
               </span>
 
               <button
                 type="button"
-                className="secondary-button"
+                className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={
                   busy || result.pagination.page >= result.pagination.totalPages
                 }
