@@ -79,6 +79,7 @@ export class PatientAppointmentsService {
             endsAt: true,
             status: true,
             mode: true,
+            consultationEndedAt: true,
             doctor: {
               select: {
                 displayName: true,

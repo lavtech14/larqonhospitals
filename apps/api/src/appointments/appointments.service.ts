@@ -590,6 +590,7 @@ export class AppointmentsService {
             endsAt: true,
             status: true,
             mode: true,
+            consultationEndedAt: true,
             version: true,
             patient: {
               select: {

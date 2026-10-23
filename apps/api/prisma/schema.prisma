@@ -274,6 +274,8 @@ model Appointment {
 
   bookingRequests AppointmentBookingRequest[]
   mode            AppointmentMode             @default(IN_PERSON)
+  consultationEndedAt      DateTime? @db.Timestamptz(3)
+consultationRoomClosedAt DateTime? @db.Timestamptz(3)
 
   @@index([doctorId, startsAt])
   @@index([patientId, startsAt])

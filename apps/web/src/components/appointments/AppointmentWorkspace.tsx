@@ -12,6 +12,7 @@ interface Appointment {
   mode: "IN_PERSON" | "ONLINE";
   endsAt: string;
   status: "BOOKED" | "CANCELLED";
+  consultationEndedAt: string | null;
   version: number;
   patient: {
     id: string;
@@ -399,6 +400,27 @@ export default function AppointmentWorkspace({
                             ? "Online"
                             : "In person"}
                         </div>
+                        {scope === "mine" &&
+                          appointment.mode === "ONLINE" &&
+                          (appointment.consultationEndedAt ? (
+                            <span>
+                              Completed ·{" "}
+                              {new Date(
+                                appointment.consultationEndedAt,
+                              ).toLocaleString("en-IN", {
+                                timeZone: "Asia/Kolkata",
+                                dateStyle: "medium",
+                                timeStyle: "short",
+                              })}
+                            </span>
+                          ) : appointment.status === "BOOKED" ? (
+                            <Link
+                              href={`/my-appointments/${appointment.id}/consultation`}
+                              className="primary-button"
+                            >
+                              Join consultation
+                            </Link>
+                          ) : null)}
                       </td>
 
                       {canCancel && (

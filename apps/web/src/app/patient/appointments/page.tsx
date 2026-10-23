@@ -12,6 +12,7 @@ interface Appointment {
   startsAt: string;
   endsAt: string;
   status: "BOOKED" | "CANCELLED";
+  consultationEndedAt: string | null;
   mode: "IN_PERSON" | "ONLINE";
   doctor: {
     displayName: string;
@@ -285,6 +286,26 @@ export default function PatientAppointmentsPage() {
                     >
                       {appointment.status === "BOOKED" ? "Booked" : "Cancelled"}
                     </span>
+                    {appointment.mode === "ONLINE" &&
+                      (appointment.consultationEndedAt ? (
+                        <span>
+                          Completed ·{" "}
+                          {new Date(
+                            appointment.consultationEndedAt,
+                          ).toLocaleString("en-IN", {
+                            timeZone: "Asia/Kolkata",
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })}
+                        </span>
+                      ) : appointment.status === "BOOKED" ? (
+                        <Link
+                          href={`/patient/appointments/${appointment.id}/consultation`}
+                          className="primary-button"
+                        >
+                          Join consultation
+                        </Link>
+                      ) : null)}
                   </div>
 
                   <p className="muted">

@@ -13,6 +13,7 @@ import { PatientAccountsModule } from './patient-accounts/patient-accounts.modul
 import { PatientAuthModule } from './patient-auth/patient-auth.module.js';
 import { PatientPortalModule } from './patient-portal/patient-portal.module.js';
 import { HealthController } from './health.controller.js';
+import { ConsultationsModule } from './consultations/consultations.module.js';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { HealthController } from './health.controller.js';
     PatientAccountsModule,
     PatientAuthModule,
     PatientPortalModule,
+    ConsultationsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

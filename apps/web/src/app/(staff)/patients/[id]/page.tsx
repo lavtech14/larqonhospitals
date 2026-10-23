@@ -1,3 +1,4 @@
+export const instant = false;
 import PatientDetails from "@/components/patients/PatientDetails";
 
 export default async function PatientDetailsPage({

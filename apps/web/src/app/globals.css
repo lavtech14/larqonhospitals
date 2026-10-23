@@ -1573,3 +1573,136 @@ select:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
+.consultation-page {
+  width: min(1200px, 100%);
+  margin-inline: auto;
+  padding: clamp(16px, 3vw, 32px);
+}
+
+.consultation-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.consultation-heading h1 {
+  margin-block: 8px;
+}
+
+.consultation-lobby {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  max-width: 620px;
+  margin: 40px auto;
+  padding: clamp(24px, 5vw, 48px);
+  border: 1px solid #dce5ed;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 16px 48px rgb(15 23 42 / 6%);
+  text-align: center;
+}
+
+.consultation-lobby h2,
+.consultation-lobby p {
+  margin: 0;
+}
+
+.consultation-symbol {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: #e6f5f3;
+  color: #087f8c;
+  font-size: 40px;
+}
+
+.consultation-options {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  padding: 18px;
+  border: 1px solid #dce5ed;
+  border-radius: 14px;
+  text-align: left;
+}
+
+.consultation-options label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.consultation-options input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.consultation-live-room {
+  height: clamp(420px, 72dvh, 850px);
+  overflow: hidden;
+  border-radius: 20px;
+  background: #111827;
+}
+
+.consultation-media {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.consultation-grid {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.consultation-grid > .lk-grid-layout {
+  height: 100%;
+}
+
+.consultation-media .lk-control-bar {
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  height: auto;
+  min-height: 72px;
+}
+
+.consultation-presence {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 14px;
+}
+
+.consultation-presence-dot {
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #fbbf24;
+}
+
+.consultation-presence-connected .consultation-presence-dot {
+  background: #34d399;
+}
+
+.consultation-live-room {
+  display: flex;
+  flex-direction: column;
+}
+
+.consultation-media {
+  flex: 1;
+  min-height: 0;
+}
