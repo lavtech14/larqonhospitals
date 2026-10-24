@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { ApiError, apiRequest } from "@/lib/api";
 import type { AuthResponse, StaffUser } from "@/lib/api";
 
@@ -19,7 +19,6 @@ export function useStaffUser(): StaffUser {
 }
 
 type SessionState = {
-  path: string;
   user: StaffUser | null;
   error: string;
 };
@@ -29,7 +28,6 @@ export default function StaffSessionGate({
 }: {
   children: ReactNode;
 }) {
-  const pathname = usePathname();
   const router = useRouter();
 
   const [state, setState] = useState<SessionState | null>(null);
@@ -67,7 +65,6 @@ export default function StaffSessionGate({
         }
 
         setState({
-          path: pathname,
           user: result.user,
           error: "",
         });
@@ -80,7 +77,6 @@ export default function StaffSessionGate({
         }
 
         setState({
-          path: pathname,
           user: null,
           error:
             error instanceof Error
@@ -126,9 +122,9 @@ export default function StaffSessionGate({
       window.removeEventListener("larqon:unauthorized", onUnauthorized);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [pathname, router, attempt]);
+  }, [router, attempt]);
 
-  if (!state || state.path !== pathname) {
+  if (!state) {
     return (
       <main className="session-screen">
         <p role="status">Checking your staff session...</p>
