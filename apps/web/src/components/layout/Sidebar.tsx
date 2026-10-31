@@ -9,7 +9,7 @@ import WorkspaceIcon from "./WorkspaceIcon";
 function Brand() {
   return (
     <Link
-      href="/"
+      href="/dashboard"
       className="flex min-h-12 items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-teal-700"
     >
       <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-teal-800 text-white">

@@ -4,16 +4,16 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import { createHash } from 'node:crypto';
-import type { ListOwnAppointmentsDto } from './list-own-appointments.dto.js';
+} from "@nestjs/common";
+import { createHash } from "node:crypto";
+import type { ListOwnAppointmentsDto } from "./list-own-appointments.dto.js";
 
-import { DatabaseService } from '../database/database.service.js';
-import { generateDaySlots } from '../availability/slot.utils.js';
-import type { CreateAppointmentDto } from './create-appointment.dto.js';
-import { Prisma } from '../generated/prisma/client.js';
-import type { ListAppointmentsDto } from './list-appointments.dto.js';
-import type { CancelAppointmentDto } from './cancel-appointment.dto.js';
+import { DatabaseService } from "../database/database.service.js";
+import { generateDaySlots } from "../availability/slot.utils.js";
+import type { CreateAppointmentDto } from "./create-appointment.dto.js";
+import { Prisma } from "../generated/prisma/client.js";
+import type { ListAppointmentsDto } from "./list-appointments.dto.js";
+import type { CancelAppointmentDto } from "./cancel-appointment.dto.js";
 
 const DAY_MS = 86_400_000;
 const INDIA_OFFSET_MS = 330 * 60_000;
@@ -43,7 +43,7 @@ export class AppointmentsService {
     const doctorId = dto.doctorId.toLowerCase();
     const key = idempotencyKey.toLowerCase();
 
-    const mode = dto.mode ?? 'IN_PERSON';
+    const mode = dto.mode ?? "IN_PERSON";
 
     const requestData = {
       patientId,
@@ -54,7 +54,7 @@ export class AppointmentsService {
     };
 
     const hash = (value: unknown) =>
-      createHash('sha256').update(JSON.stringify(value)).digest('hex');
+      createHash("sha256").update(JSON.stringify(value)).digest("hex");
 
     const requestHash = hash({
       ...requestData,
@@ -95,13 +95,13 @@ export class AppointmentsService {
           const matchesCurrent = previous.requestHash === requestHash;
 
           const matchesLegacy =
-            mode === 'IN_PERSON' && previous.requestHash === legacyRequestHash;
+            mode === "IN_PERSON" && previous.requestHash === legacyRequestHash;
 
           if (!matchesCurrent && !matchesLegacy) {
             throw new ConflictException({
-              code: 'IDEMPOTENCY_KEY_REUSED',
+              code: "IDEMPOTENCY_KEY_REUSED",
               message:
-                'This booking key was already used for different booking details.',
+                "This booking key was already used for different booking details.",
             });
           }
 
@@ -126,7 +126,7 @@ export class AppointmentsService {
           !Number.isFinite(date.getTime()) ||
           date.toISOString().slice(0, 10) !== dto.date
         ) {
-          throw new BadRequestException('Invalid calendar date.');
+          throw new BadRequestException("Invalid calendar date.");
         }
 
         const today = new Date(now.getTime() + INDIA_OFFSET_MS)
@@ -139,7 +139,7 @@ export class AppointmentsService {
 
         if (daysAhead < 0 || daysAhead > 180) {
           throw new BadRequestException(
-            'Choose a date from today through 180 days ahead.',
+            "Choose a date from today through 180 days ahead.",
           );
         }
 
@@ -176,7 +176,7 @@ export class AppointmentsService {
         });
 
         if (!doctor) {
-          throw new NotFoundException('Doctor profile not found.');
+          throw new NotFoundException("Doctor profile not found.");
         }
 
         const patient = await tx.patient.findUnique({
@@ -185,31 +185,31 @@ export class AppointmentsService {
         });
 
         if (!patient) {
-          throw new NotFoundException('Patient not found.');
+          throw new NotFoundException("Patient not found.");
         }
 
         if (!doctor.isActive || !doctor.department.isActive) {
-          throw new ConflictException('The doctor or department is inactive.');
+          throw new ConflictException("The doctor or department is inactive.");
         }
 
         const availability = doctor.availability;
 
         if (!availability) {
           throw new ConflictException(
-            'This doctor has no weekly availability.',
+            "This doctor has no weekly availability.",
           );
         }
 
         if (availability.version !== dto.expectedAvailabilityVersion) {
           throw new ConflictException({
-            code: 'AVAILABILITY_VERSION_CONFLICT',
-            message: 'The schedule changed. Refresh the slots before booking.',
+            code: "AVAILABILITY_VERSION_CONFLICT",
+            message: "The schedule changed. Refresh the slots before booking.",
           });
         }
 
-        if (availability.timeZone !== 'Asia/Kolkata') {
+        if (availability.timeZone !== "Asia/Kolkata") {
           throw new BadRequestException(
-            'Booking currently supports Asia/Kolkata only.',
+            "Booking currently supports Asia/Kolkata only.",
           );
         }
 
@@ -226,11 +226,11 @@ export class AppointmentsService {
         });
 
         if (hospitalClosure?.isClosed) {
-          throw new ConflictException('The hospital is closed on this date.');
+          throw new ConflictException("The hospital is closed on this date.");
         }
 
         if (doctorClosure?.isClosed) {
-          throw new ConflictException('The doctor is on leave on this date.');
+          throw new ConflictException("The doctor is on leave on this date.");
         }
 
         const requestedStart = new Date(
@@ -246,8 +246,8 @@ export class AppointmentsService {
 
         if (!selectedSlot) {
           throw new ConflictException({
-            code: 'SLOT_UNAVAILABLE',
-            message: 'This time is not an available future consultation slot.',
+            code: "SLOT_UNAVAILABLE",
+            message: "This time is not an available future consultation slot.",
           });
         }
 
@@ -256,7 +256,7 @@ export class AppointmentsService {
 
         const overlap = await tx.appointment.findFirst({
           where: {
-            status: 'BOOKED',
+            status: "BOOKED",
             startsAt: { lt: endsAt },
             endsAt: { gt: startsAt },
             OR: [{ doctorId }, { patientId }],
@@ -266,16 +266,16 @@ export class AppointmentsService {
 
         if (overlap) {
           throw new ConflictException({
-            code: 'APPOINTMENT_OVERLAP',
+            code: "APPOINTMENT_OVERLAP",
             message:
-              'The doctor or patient already has a booking during this time.',
+              "The doctor or patient already has a booking during this time.",
           });
         }
 
         // Catch a slot that elapsed while database checks were running.
         if (startsAt.getTime() <= Date.now()) {
           throw new ConflictException(
-            'This slot has already started. Choose another time.',
+            "This slot has already started. Choose another time.",
           );
         }
 
@@ -303,8 +303,8 @@ export class AppointmentsService {
         await tx.auditEvent.create({
           data: {
             actorStaffId,
-            action: 'APPOINTMENT_BOOKED',
-            resourceType: 'Appointment',
+            action: "APPOINTMENT_BOOKED",
+            resourceType: "Appointment",
             resourceId: appointment.id,
           },
         });
@@ -315,7 +315,7 @@ export class AppointmentsService {
         };
       },
       {
-        isolationLevel: 'ReadCommitted',
+        isolationLevel: "ReadCommitted",
         maxWait: 5_000,
         timeout: 15_000,
       },
@@ -329,7 +329,7 @@ export class AppointmentsService {
         !Number.isFinite(date.getTime()) ||
         date.toISOString().slice(0, 10) !== value
       ) {
-        throw new BadRequestException('Invalid calendar date.');
+        throw new BadRequestException("Invalid calendar date.");
       }
 
       return date;
@@ -342,7 +342,7 @@ export class AppointmentsService {
 
     if (dayDifference < 0 || dayDifference > 30) {
       throw new BadRequestException(
-        'Choose an ordered date range containing no more than 31 dates.',
+        "Choose an ordered date range containing no more than 31 dates.",
       );
     }
 
@@ -366,16 +366,25 @@ export class AppointmentsService {
       [
         this.database.appointment.findMany({
           where,
-          orderBy: [{ startsAt: 'asc' }, { id: 'asc' }],
+          orderBy: [{ startsAt: "asc" }, { id: "asc" }],
           skip: (query.page - 1) * query.limit,
           take: query.limit,
           select: {
             ...appointmentFields,
             cancelledAt: true,
+            encounter: {
+              select: {
+                id: true,
+                status: true,
+                checkedInAt: true,
+                version: true,
+              },
+            },
             patient: {
               select: {
                 id: true,
                 fullName: true,
+                mrn: true,
               },
             },
             doctor: {
@@ -389,12 +398,12 @@ export class AppointmentsService {
         this.database.appointment.count({ where }),
       ],
       {
-        isolationLevel: 'RepeatableRead',
+        isolationLevel: "RepeatableRead",
       },
     );
 
     return {
-      timeZone: 'Asia/Kolkata',
+      timeZone: "Asia/Kolkata",
       items,
       total,
       page: query.page,
@@ -421,15 +430,38 @@ export class AppointmentsService {
         });
 
         if (!appointment) {
-          throw new NotFoundException('Appointment not found.');
+          throw new NotFoundException("Appointment not found.");
         }
 
         // Repeating a successful cancellation is safe.
-        if (appointment.status === 'CANCELLED') {
+        if (appointment.status === "CANCELLED") {
           return {
             alreadyCancelled: true,
             appointment,
           };
+        }
+
+        const billingCharges = await tx.billingInvoiceLine.count({
+          where: { appointmentId, reservedKey: { not: null } },
+        });
+        if (billingCharges > 0) {
+          throw new ConflictException(
+            "This consultation has billing charges. Cancel its draft invoice first; issued invoices require billing review.",
+          );
+        }
+
+        // Check-in uses the same hospital lock. Once a visit exists,
+        // booking cancellation must not leave an orphaned clinical workflow.
+        const encounter = await tx.encounter.findUnique({
+          where: { appointmentId },
+          select: { id: true },
+        });
+        if (encounter) {
+          throw new ConflictException({
+            code: "APPOINTMENT_HAS_ENCOUNTER",
+            message:
+              "This patient has already checked in. Appointment cancellation is unavailable; contact the clinical team.",
+          });
         }
 
         // Coordinate with this doctor's schedule and leave changes.
@@ -442,8 +474,8 @@ export class AppointmentsService {
 
         if (appointment.version !== dto.expectedVersion) {
           throw new ConflictException({
-            code: 'APPOINTMENT_VERSION_CONFLICT',
-            message: 'This appointment changed. Refresh before cancelling.',
+            code: "APPOINTMENT_VERSION_CONFLICT",
+            message: "This appointment changed. Refresh before cancelling.",
           });
         }
 
@@ -451,20 +483,20 @@ export class AppointmentsService {
 
         if (appointment.startsAt.getTime() <= now.getTime()) {
           throw new ConflictException({
-            code: 'APPOINTMENT_ALREADY_STARTED',
+            code: "APPOINTMENT_ALREADY_STARTED",
             message:
-              'Only appointments that have not started can be cancelled.',
+              "Only appointments that have not started can be cancelled.",
           });
         }
 
         const updated = await tx.appointment.updateMany({
           where: {
             id: appointmentId,
-            status: 'BOOKED',
+            status: "BOOKED",
             version: dto.expectedVersion,
           },
           data: {
-            status: 'CANCELLED',
+            status: "CANCELLED",
             cancelledAt: now,
             cancelledByStaffId: actorStaffId,
             version: { increment: 1 },
@@ -473,16 +505,16 @@ export class AppointmentsService {
 
         if (updated.count !== 1) {
           throw new ConflictException({
-            code: 'APPOINTMENT_VERSION_CONFLICT',
-            message: 'This appointment changed. Refresh before cancelling.',
+            code: "APPOINTMENT_VERSION_CONFLICT",
+            message: "This appointment changed. Refresh before cancelling.",
           });
         }
 
         await tx.auditEvent.create({
           data: {
             actorStaffId,
-            action: 'APPOINTMENT_CANCELLED',
-            resourceType: 'Appointment',
+            action: "APPOINTMENT_CANCELLED",
+            resourceType: "Appointment",
             resourceId: appointmentId,
           },
         });
@@ -498,7 +530,7 @@ export class AppointmentsService {
         };
       },
       {
-        isolationLevel: 'ReadCommitted',
+        isolationLevel: "ReadCommitted",
         maxWait: 5_000,
         timeout: 15_000,
       },
@@ -513,7 +545,7 @@ export class AppointmentsService {
         !Number.isFinite(date.getTime()) ||
         date.toISOString().slice(0, 10) !== value
       ) {
-        throw new BadRequestException('Invalid calendar date.');
+        throw new BadRequestException("Invalid calendar date.");
       }
 
       return date;
@@ -526,7 +558,7 @@ export class AppointmentsService {
 
     if (dayDifference < 0 || dayDifference > 30) {
       throw new BadRequestException(
-        'Choose an ordered date range containing no more than 31 dates.',
+        "Choose an ordered date range containing no more than 31 dates.",
       );
     }
 
@@ -556,17 +588,17 @@ export class AppointmentsService {
 
         if (!doctor) {
           throw new ForbiddenException({
-            code: 'DOCTOR_PROFILE_NOT_LINKED',
+            code: "DOCTOR_PROFILE_NOT_LINKED",
             message:
-              'Your staff account is not linked to a doctor profile. Contact your hospital administrator.',
+              "Your staff account is not linked to a doctor profile. Contact your hospital administrator.",
           });
         }
 
         if (!doctor.isActive || !doctor.department.isActive) {
           throw new ForbiddenException({
-            code: 'DOCTOR_PROFILE_INACTIVE',
+            code: "DOCTOR_PROFILE_INACTIVE",
             message:
-              'Your doctor profile or department is inactive. Contact your hospital administrator.',
+              "Your doctor profile or department is inactive. Contact your hospital administrator.",
           });
         }
 
@@ -581,7 +613,7 @@ export class AppointmentsService {
 
         const items = await tx.appointment.findMany({
           where,
-          orderBy: [{ startsAt: 'asc' }, { id: 'asc' }],
+          orderBy: [{ startsAt: "asc" }, { id: "asc" }],
           skip: (query.page - 1) * query.limit,
           take: query.limit,
           select: {
@@ -614,7 +646,7 @@ export class AppointmentsService {
             id: doctor.id,
             displayName: doctor.displayName,
           },
-          timeZone: 'Asia/Kolkata',
+          timeZone: "Asia/Kolkata",
           items,
           total,
           page: query.page,
@@ -623,7 +655,7 @@ export class AppointmentsService {
         };
       },
       {
-        isolationLevel: 'RepeatableRead',
+        isolationLevel: "RepeatableRead",
       },
     );
   }

@@ -24,6 +24,12 @@ export default function LoginFrame({
             aria-hidden="true"
             className="pointer-events-none absolute -right-28 -bottom-28 size-96 rounded-full border-[56px] border-white/5"
           />
+          <Link
+            href="/"
+            className="relative mb-5 inline-flex min-h-10 items-center text-xs font-semibold text-teal-100 underline underline-offset-4"
+          >
+            ← Back to hospital home
+          </Link>
           <div className="relative flex items-center gap-3">
             <span
               aria-hidden="true"

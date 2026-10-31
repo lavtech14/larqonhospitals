@@ -11,9 +11,10 @@ datasource db {
 }
 
 model Patient {
-  id       String  @id @default(uuid()) @db.Uuid
-  fullName String  @db.VarChar(100)
-  phone    String? @db.VarChar(20)
+  billingInvoices BillingInvoice[]
+  id              String           @id @default(uuid()) @db.Uuid
+  fullName        String           @db.VarChar(100)
+  phone           String?          @db.VarChar(20)
 
   addressLine1 String? @db.VarChar(200)
   addressLine2 String? @db.VarChar(200)
@@ -60,32 +61,53 @@ enum StaffRole {
 }
 
 model StaffUser {
-  id                 String    @id @default(uuid()) @db.Uuid
-  email              String    @unique @db.VarChar(254)
-  fullName           String    @db.VarChar(100)
-  addressLine1       String?   @db.VarChar(200)
-  addressLine2       String?   @db.VarChar(200)
-  city               String?   @db.VarChar(100)
-  district           String?   @db.VarChar(100)
-  state              String?   @db.VarChar(100)
-  postalCode         String?   @db.VarChar(20)
-  countryCode        String?   @db.Char(2)
-  passwordHash       String
-  isActive           Boolean   @default(true)
-  mustChangePassword Boolean   @default(true)
-  passwordChangedAt  DateTime? @db.Timestamptz(3)
-  createdAt          DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt          DateTime  @updatedAt @db.Timestamptz(3)
+  createdBillingInvoices   BillingInvoice[]   @relation("BillingCreator")
+  issuedBillingInvoices    BillingInvoice[]   @relation("BillingIssuer")
+  cancelledBillingInvoices BillingInvoice[]   @relation("BillingCanceller")
+  billingPayments          BillingPayment[]   @relation("BillingPaymentReceiver")
+  billingPrices            BillingPrice[]     @relation("BillingPriceEditor")
+  billingRequests          BillingRequest[]
+  receivedPharmacyStock    PharmacyStockLot[] @relation("PharmacyStockReceiver")
+  pharmacyDispenses        PharmacyDispense[] @relation("PharmacyDispenser")
+  id                       String             @id @default(uuid()) @db.Uuid
+  email                    String             @unique @db.VarChar(254)
+  fullName                 String             @db.VarChar(100)
+  addressLine1             String?            @db.VarChar(200)
+  addressLine2             String?            @db.VarChar(200)
+  city                     String?            @db.VarChar(100)
+  district                 String?            @db.VarChar(100)
+  state                    String?            @db.VarChar(100)
+  postalCode               String?            @db.VarChar(20)
+  countryCode              String?            @db.Char(2)
+  passwordHash             String
+  isActive                 Boolean            @default(true)
+  mustChangePassword       Boolean            @default(true)
+  passwordChangedAt        DateTime?          @db.Timestamptz(3)
+  createdAt                DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt                DateTime           @updatedAt @db.Timestamptz(3)
 
-  roles                  StaffUserRole[]
-  sessions               StaffSession[]
-  auditEvents            AuditEvent[]
-  registrationRequests   PatientRegistrationRequest[]
-  doctorProfile          DoctorProfile?
-  createdAppointments    Appointment[]                @relation("AppointmentCreator")
-  cancelledAppointments  Appointment[]                @relation("AppointmentCanceller")
-  bookingRequests        AppointmentBookingRequest[]
-  createdPatientAccounts PatientAccount[]
+  roles                   StaffUserRole[]
+  sessions                StaffSession[]
+  auditEvents             AuditEvent[]
+  registrationRequests    PatientRegistrationRequest[]
+  doctorProfile           DoctorProfile?
+  createdAppointments     Appointment[]                @relation("AppointmentCreator")
+  cancelledAppointments   Appointment[]                @relation("AppointmentCanceller")
+  bookingRequests         AppointmentBookingRequest[]
+  createdPatientAccounts  PatientAccount[]
+  checkedInEncounters     Encounter[]                  @relation("EncounterCheckInStaff")
+  recordedVitals          VitalObservation[]           @relation("VitalRecorder")
+  clinicalNoteRevisions   ClinicalNoteRevision[]       @relation("ClinicalNoteAuthor")
+  authoredPrescriptions   Prescription[]               @relation("PrescriptionAuthor")
+  prescriptionRequests    PrescriptionRequest[]        @relation("PrescriptionRequestActor")
+  publishedVisitSummaries PublishedVisitSummary[]      @relation("VisitSummaryPublisher")
+  createdLabOrders        LabOrder[]                   @relation("LabOrderCreator")
+  collectedLabSamples     LabSample[]                  @relation("LabSampleCollector")
+  labResultRevisions      LabResultRevision[]          @relation("LabResultAuthor")
+  releasedLabReports      LabReleasedReport[]          @relation("LabReportReviewer")
+  labSampleRejections     LabSampleRejection[]         @relation("LabSampleRejector")
+  cancelledLabOrders      LabOrder[]                   @relation("LabOrderCanceller")
+  labOrderCancellations   LabOrderCancellation[]       @relation("LabOrderCancellationActor")
 }
 
 model StaffUserRole {
@@ -167,12 +189,13 @@ model Department {
 }
 
 model DoctorProfile {
-  id                    String  @id @default(uuid()) @db.Uuid
-  displayName           String  @db.VarChar(100)
-  specialty             String  @db.VarChar(100)
-  qualification         String? @db.VarChar(200)
-  registrationNumber    String? @db.VarChar(100)
-  registrationAuthority String? @db.VarChar(100)
+  billingPrices         BillingPrice[]
+  id                    String         @id @default(uuid()) @db.Uuid
+  displayName           String         @db.VarChar(100)
+  specialty             String         @db.VarChar(100)
+  qualification         String?        @db.VarChar(200)
+  registrationNumber    String?        @db.VarChar(100)
+  registrationAuthority String?        @db.VarChar(100)
 
   departmentId String  @db.Uuid
   staffUserId  String? @unique @db.Uuid
@@ -253,16 +276,17 @@ enum AppointmentStatus {
 }
 
 model Appointment {
-  id               String            @id @default(uuid()) @db.Uuid
-  patientId        String            @db.Uuid
-  doctorId         String            @db.Uuid
-  createdByStaffId String            @db.Uuid
-  startsAt         DateTime          @db.Timestamptz(3)
-  endsAt           DateTime          @db.Timestamptz(3)
-  status           AppointmentStatus @default(BOOKED)
-  version          Int               @default(1)
-  createdAt        DateTime          @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime          @updatedAt @db.Timestamptz(3)
+  billingLines     BillingInvoiceLine[]
+  id               String               @id @default(uuid()) @db.Uuid
+  patientId        String               @db.Uuid
+  doctorId         String               @db.Uuid
+  createdByStaffId String               @db.Uuid
+  startsAt         DateTime             @db.Timestamptz(3)
+  endsAt           DateTime             @db.Timestamptz(3)
+  status           AppointmentStatus    @default(BOOKED)
+  version          Int                  @default(1)
+  createdAt        DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime             @updatedAt @db.Timestamptz(3)
 
   cancelledAt        DateTime? @db.Timestamptz(3)
   cancelledByStaffId String?   @db.Uuid
@@ -272,10 +296,11 @@ model Appointment {
   createdBy   StaffUser     @relation("AppointmentCreator", fields: [createdByStaffId], references: [id], onDelete: Restrict)
   cancelledBy StaffUser?    @relation("AppointmentCanceller", fields: [cancelledByStaffId], references: [id], onDelete: Restrict)
 
-  bookingRequests AppointmentBookingRequest[]
-  mode            AppointmentMode             @default(IN_PERSON)
-  consultationEndedAt      DateTime? @db.Timestamptz(3)
-consultationRoomClosedAt DateTime? @db.Timestamptz(3)
+  bookingRequests          AppointmentBookingRequest[]
+  mode                     AppointmentMode             @default(IN_PERSON)
+  consultationEndedAt      DateTime?                   @db.Timestamptz(3)
+  consultationRoomClosedAt DateTime?                   @db.Timestamptz(3)
+  encounter                Encounter?
 
   @@index([doctorId, startsAt])
   @@index([patientId, startsAt])
@@ -359,4 +384,682 @@ enum PatientPhoneOwner {
   GUARDIAN
   OTHER
   UNKNOWN
+}
+
+enum EncounterStatus {
+  CHECKED_IN
+  READY_FOR_DOCTOR
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Encounter {
+  id                 String          @id @default(uuid()) @db.Uuid
+  appointmentId      String          @unique @db.Uuid
+  status             EncounterStatus @default(CHECKED_IN)
+  checkedInAt        DateTime        @default(now()) @db.Timestamptz(3)
+  checkedInByStaffId String          @db.Uuid
+  readyForDoctorAt   DateTime?       @db.Timestamptz(3)
+  startedAt          DateTime?       @db.Timestamptz(3)
+  completedAt        DateTime?       @db.Timestamptz(3)
+  cancelledAt        DateTime?       @db.Timestamptz(3)
+  version            Int             @default(1)
+  createdAt          DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime        @updatedAt @db.Timestamptz(3)
+
+  appointment      Appointment            @relation(fields: [appointmentId], references: [id], onDelete: Restrict)
+  checkedInBy      StaffUser              @relation("EncounterCheckInStaff", fields: [checkedInByStaffId], references: [id], onDelete: Restrict)
+  vitals           VitalObservation[]
+  noteRevisions    ClinicalNoteRevision[]
+  prescriptions    Prescription[]
+  publishedSummary PublishedVisitSummary?
+  labOrders        LabOrder[]
+
+  @@index([status, checkedInAt])
+  @@index([checkedInByStaffId])
+}
+
+model VitalObservation {
+  id          String @id @default(uuid()) @db.Uuid
+  encounterId String @db.Uuid
+
+  temperatureC     Decimal? @db.Decimal(5, 2)
+  pulseBpm         Int?
+  respiratoryRate  Int?
+  systolicBp       Int?
+  diastolicBp      Int?
+  oxygenSaturation Decimal? @db.Decimal(5, 2)
+  weightKg         Decimal? @db.Decimal(6, 2)
+  heightCm         Decimal? @db.Decimal(6, 2)
+
+  measuredAt        DateTime @db.Timestamptz(3)
+  recordedAt        DateTime @default(now()) @db.Timestamptz(3)
+  recordedByStaffId String   @db.Uuid
+
+  notes String? @db.VarChar(1000)
+
+  idempotencyKey String @db.Uuid
+  requestHash    String @db.VarChar(64)
+
+  encounter  Encounter @relation(fields: [encounterId], references: [id], onDelete: Restrict)
+  recordedBy StaffUser @relation("VitalRecorder", fields: [recordedByStaffId], references: [id], onDelete: Restrict)
+
+  @@unique([recordedByStaffId, idempotencyKey])
+  @@index([encounterId, measuredAt, id])
+  @@index([recordedByStaffId, recordedAt])
+}
+
+model ClinicalNoteRevision {
+  id            String @id @default(uuid()) @db.Uuid
+  encounterId   String @db.Uuid
+  authorStaffId String @db.Uuid
+  revision      Int
+
+  complaint   String @db.VarChar(5000)
+  history     String @db.VarChar(5000)
+  examination String @db.VarChar(5000)
+  assessment  String @db.VarChar(5000)
+  plan        String @db.VarChar(5000)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  idempotencyKey String @db.Uuid
+  requestHash    String @db.VarChar(64)
+
+  encounter          Encounter               @relation(fields: [encounterId], references: [id], onDelete: Restrict)
+  author             StaffUser               @relation("ClinicalNoteAuthor", fields: [authorStaffId], references: [id], onDelete: Restrict)
+  publishedSummaries PublishedVisitSummary[]
+
+  @@unique([encounterId, revision])
+  @@unique([authorStaffId, idempotencyKey])
+}
+
+enum PrescriptionStatus {
+  DRAFT
+  ISSUED
+  CANCELLED
+  REPLACED
+}
+
+enum AllergyReviewStatus {
+  NOT_REVIEWED
+  NO_KNOWN_ALLERGIES
+  ALLERGIES_REPORTED
+  UNKNOWN
+}
+
+enum PrescriptionOperation {
+  CREATE_DRAFT
+  SAVE_DRAFT
+  ISSUE
+  CANCEL
+}
+
+model Medicine {
+  billingPrices BillingPrice[]
+  id            String         @id @default(uuid()) @db.Uuid
+  code          String         @unique @db.VarChar(40)
+  displayName   String         @db.VarChar(200)
+  genericName   String?        @db.VarChar(200)
+  strength      String         @db.VarChar(100)
+  dosageForm    String         @db.VarChar(100)
+
+  isActive Boolean @default(true)
+  version  Int     @default(1)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  pharmacyStockLots PharmacyStockLot[]
+  prescriptionItems PrescriptionItem[]
+
+  @@index([displayName])
+  @@index([isActive, displayName])
+}
+
+model Prescription {
+  pharmacyDispenses PharmacyDispense[]
+  id                String             @id @default(uuid()) @db.Uuid
+  encounterId       String             @db.Uuid
+  authorStaffId     String             @db.Uuid
+
+  status  PrescriptionStatus @default(DRAFT)
+  version Int                @default(1)
+
+  allergyStatus  AllergyReviewStatus @default(NOT_REVIEWED)
+  allergyDetails String?             @db.VarChar(2000)
+  instructions   String?             @db.VarChar(2000)
+
+  // Identity snapshots populated when the prescription is issued.
+  patientName                     String? @db.VarChar(100)
+  patientMrn                      String? @db.VarChar(30)
+  prescriberName                  String? @db.VarChar(100)
+  prescriberRegistrationNumber    String? @db.VarChar(100)
+  prescriberRegistrationAuthority String? @db.VarChar(100)
+
+  issuedAt           DateTime? @db.Timestamptz(3)
+  cancelledAt        DateTime? @db.Timestamptz(3)
+  cancellationReason String?   @db.VarChar(1000)
+
+  replacesPrescriptionId String? @unique @db.Uuid
+  replacementReason      String? @db.VarChar(1000)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  encounter Encounter @relation(fields: [encounterId], references: [id], onDelete: Restrict)
+  author    StaffUser @relation("PrescriptionAuthor", fields: [authorStaffId], references: [id], onDelete: Restrict)
+
+  replaces    Prescription? @relation("PrescriptionReplacement", fields: [replacesPrescriptionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  replacement Prescription? @relation("PrescriptionReplacement")
+
+  items    PrescriptionItem[]
+  requests PrescriptionRequest[]
+
+  @@index([encounterId, createdAt])
+  @@index([authorStaffId, createdAt])
+  @@index([status, issuedAt])
+}
+
+model PrescriptionItem {
+  pharmacyDispenseItems PharmacyDispenseItem[]
+  id                    String                 @id @default(uuid()) @db.Uuid
+  prescriptionId        String                 @db.Uuid
+  medicineId            String                 @db.Uuid
+  position              Int
+
+  // Copied from the selected catalogue entry.
+  medicineName String  @db.VarChar(200)
+  genericName  String? @db.VarChar(200)
+  strength     String  @db.VarChar(100)
+  dosageForm   String  @db.VarChar(100)
+
+  // Entered explicitly by the prescribing doctor.
+  dose         String  @db.VarChar(200)
+  route        String  @db.VarChar(100)
+  frequency    String  @db.VarChar(200)
+  duration     String  @db.VarChar(200)
+  quantity     Decimal @db.Decimal(10, 2)
+  quantityUnit String  @db.VarChar(50)
+
+  instructions String? @db.VarChar(1000)
+
+  prescription Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Restrict)
+  medicine     Medicine     @relation(fields: [medicineId], references: [id], onDelete: Restrict)
+
+  @@unique([prescriptionId, position])
+  @@index([medicineId])
+}
+
+model PrescriptionRequest {
+  actorStaffId String @db.Uuid
+  key          String @db.Uuid
+
+  operation      PrescriptionOperation
+  requestHash    String                @db.VarChar(64)
+  prescriptionId String                @db.Uuid
+  resultVersion  Int
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  actor        StaffUser    @relation("PrescriptionRequestActor", fields: [actorStaffId], references: [id], onDelete: Restrict)
+  prescription Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Restrict)
+
+  @@id([actorStaffId, key])
+  @@index([prescriptionId])
+}
+
+model PublishedVisitSummary {
+  id String @id @default(uuid()) @db.Uuid
+
+  encounterId          String @unique @db.Uuid
+  sourceNoteRevisionId String @db.Uuid
+  publishedByStaffId   String @db.Uuid
+
+  patientName String @db.VarChar(100)
+  patientMrn  String @db.VarChar(30)
+
+  doctorName                  String  @db.VarChar(100)
+  doctorRegistrationNumber    String? @db.VarChar(100)
+  doctorRegistrationAuthority String? @db.VarChar(100)
+
+  summary           String @db.VarChar(5000)
+  carePlan          String @db.VarChar(5000)
+  followUp          String @db.VarChar(2000)
+  returnPrecautions String @db.VarChar(2000)
+
+  publishedAt DateTime @default(now()) @db.Timestamptz(3)
+
+  idempotencyKey String @db.Uuid
+  requestHash    String @db.VarChar(64)
+
+  encounter          Encounter            @relation(fields: [encounterId], references: [id], onDelete: Restrict)
+  sourceNoteRevision ClinicalNoteRevision @relation(fields: [sourceNoteRevisionId], references: [id], onDelete: Restrict)
+  publishedBy        StaffUser            @relation("VisitSummaryPublisher", fields: [publishedByStaffId], references: [id], onDelete: Restrict)
+
+  @@unique([publishedByStaffId, idempotencyKey])
+  @@index([sourceNoteRevisionId])
+}
+
+model LabTest {
+  billingPrices BillingPrice[]
+  id            String         @id @default(uuid()) @db.Uuid
+
+  code        String @unique @db.VarChar(40)
+  displayName String @db.VarChar(200)
+
+  sampleType              String  @db.VarChar(100)
+  preparationInstructions String? @db.VarChar(2000)
+
+  isActive Boolean @default(true)
+  version  Int     @default(1)
+
+  createdAt  DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime       @updatedAt @db.Timestamptz(3)
+  orderItems LabOrderItem[]
+  parameters Json           @default("[]")
+
+  @@index([displayName])
+  @@index([isActive, displayName])
+}
+
+enum LabOrderPriority {
+  ROUTINE
+  URGENT
+}
+
+model LabOrder {
+  id String @id @default(uuid()) @db.Uuid
+
+  encounterId      String @db.Uuid
+  orderedByStaffId String @db.Uuid
+
+  priority LabOrderPriority @default(ROUTINE)
+  status   LabOrderStatus   @default(ORDERED)
+
+  clinicalReason String @db.VarChar(2000)
+
+  patientName String @db.VarChar(100)
+  patientMrn  String @db.VarChar(30)
+  doctorName  String @db.VarChar(100)
+
+  version   Int      @default(1)
+  orderedAt DateTime @default(now()) @db.Timestamptz(3)
+
+  idempotencyKey String @db.Uuid
+  requestHash    String @db.VarChar(64)
+
+  encounter Encounter @relation(fields: [encounterId], references: [id], onDelete: Restrict)
+  orderedBy StaffUser @relation("LabOrderCreator", fields: [orderedByStaffId], references: [id], onDelete: Restrict)
+
+  items               LabOrderItem[]
+  cancelledAt         DateTime?             @db.Timestamptz(3)
+  cancellationReason  String?               @db.VarChar(1000)
+  cancelledByStaffId  String?               @db.Uuid
+  cancelledBy         StaffUser?            @relation("LabOrderCanceller", fields: [cancelledByStaffId], references: [id], onDelete: Restrict)
+  cancellationRequest LabOrderCancellation?
+
+  @@unique([orderedByStaffId, idempotencyKey])
+  @@index([encounterId, orderedAt])
+  @@index([status, priority, orderedAt])
+}
+
+model LabOrderItem {
+  billingLines BillingInvoiceLine[]
+  id           String               @id @default(uuid()) @db.Uuid
+
+  orderId   String @db.Uuid
+  labTestId String @db.Uuid
+  position  Int
+
+  testCode                String  @db.VarChar(40)
+  testName                String  @db.VarChar(200)
+  sampleType              String  @db.VarChar(100)
+  preparationInstructions String? @db.VarChar(2000)
+
+  currentSampleId String? @unique @db.Uuid
+
+  order   LabOrder @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  labTest LabTest  @relation(fields: [labTestId], references: [id], onDelete: Restrict)
+
+  sample LabSample? @relation("CurrentLabSample", fields: [currentSampleId], references: [id], onDelete: Restrict)
+
+  samples    LabSample[] @relation("LabSampleAttempts")
+  parameters Json        @default("[]")
+
+  @@unique([orderId, labTestId])
+  @@unique([orderId, position])
+  @@index([labTestId])
+}
+
+enum LabOrderStatus {
+  ORDERED
+  COLLECTED
+  CANCELLED
+}
+
+model LabSample {
+  id String @id @default(uuid()) @db.Uuid
+
+  orderItemId String @db.Uuid
+
+  specimenReference String @unique @db.VarChar(50)
+
+  collectedAt        DateTime @db.Timestamptz(3)
+  recordedAt         DateTime @default(now()) @db.Timestamptz(3)
+  collectedByStaffId String   @db.Uuid
+
+  idempotencyKey String @db.Uuid
+  requestHash    String @db.VarChar(64)
+
+  version Int @default(1)
+
+  orderItem        LabOrderItem  @relation("LabSampleAttempts", fields: [orderItemId], references: [id], onDelete: Restrict)
+  currentOrderItem LabOrderItem? @relation("CurrentLabSample")
+
+  collectedBy StaffUser @relation("LabSampleCollector", fields: [collectedByStaffId], references: [id], onDelete: Restrict)
+
+  resultRevisions LabResultRevision[]
+  releasedReport  LabReleasedReport?
+  rejection       LabSampleRejection?
+
+  @@unique([collectedByStaffId, idempotencyKey])
+  @@index([collectedByStaffId, collectedAt])
+  @@index([orderItemId, recordedAt])
+}
+
+model LabResultRevision {
+  id String @id @default(uuid()) @db.Uuid
+
+  sampleId      String @db.Uuid
+  authorStaffId String @db.Uuid
+  revision      Int
+
+  method     String @db.VarChar(200)
+  resultText String @db.VarChar(10000)
+  comments   String @db.VarChar(2000)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  idempotencyKey String @db.Uuid
+  requestHash    String @db.VarChar(64)
+
+  sample          LabSample           @relation(fields: [sampleId], references: [id], onDelete: Restrict)
+  author          StaffUser           @relation("LabResultAuthor", fields: [authorStaffId], references: [id], onDelete: Restrict)
+  releasedReports LabReleasedReport[]
+  values          Json                @default("[]")
+
+  @@unique([sampleId, revision])
+  @@unique([authorStaffId, idempotencyKey])
+  @@index([sampleId, createdAt])
+}
+
+model LabReleasedReport {
+  id String @id @default(uuid()) @db.Uuid
+
+  sampleId          String @unique @db.Uuid
+  sourceRevisionId  String @db.Uuid
+  reviewedByStaffId String @db.Uuid
+
+  patientName String @db.VarChar(100)
+  patientMrn  String @db.VarChar(30)
+  doctorName  String @db.VarChar(100)
+
+  testCode          String   @db.VarChar(40)
+  testName          String   @db.VarChar(200)
+  sampleType        String   @db.VarChar(100)
+  specimenReference String   @db.VarChar(50)
+  collectedAt       DateTime @db.Timestamptz(3)
+
+  method     String @db.VarChar(200)
+  resultText String @db.VarChar(10000)
+  comments   String @db.VarChar(2000)
+
+  reviewerName String   @db.VarChar(100)
+  releasedAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  idempotencyKey String @db.Uuid
+  requestHash    String @db.VarChar(64)
+
+  sample         LabSample         @relation(fields: [sampleId], references: [id], onDelete: Restrict)
+  sourceRevision LabResultRevision @relation(fields: [sourceRevisionId], references: [id], onDelete: Restrict)
+  reviewedBy     StaffUser         @relation("LabReportReviewer", fields: [reviewedByStaffId], references: [id], onDelete: Restrict)
+  values         Json              @default("[]")
+
+  @@unique([reviewedByStaffId, idempotencyKey])
+  @@index([sourceRevisionId])
+  @@index([releasedAt])
+}
+
+model LabSampleRejection {
+  id String @id @default(uuid()) @db.Uuid
+
+  sampleId          String @unique @db.Uuid
+  rejectedByStaffId String @db.Uuid
+
+  reason     String   @db.VarChar(1000)
+  rejectedAt DateTime @default(now()) @db.Timestamptz(3)
+
+  idempotencyKey String @db.Uuid
+  requestHash    String @db.VarChar(64)
+
+  sample     LabSample @relation(fields: [sampleId], references: [id], onDelete: Restrict)
+  rejectedBy StaffUser @relation("LabSampleRejector", fields: [rejectedByStaffId], references: [id], onDelete: Restrict)
+
+  @@unique([rejectedByStaffId, idempotencyKey])
+  @@index([rejectedByStaffId, rejectedAt])
+}
+
+model LabOrderCancellation {
+  id             String    @id @default(uuid()) @db.Uuid
+  orderId        String    @unique @db.Uuid
+  actorStaffId   String    @db.Uuid
+  idempotencyKey String    @db.Uuid
+  requestHash    String    @db.VarChar(64)
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+  order          LabOrder  @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  actor          StaffUser @relation("LabOrderCancellationActor", fields: [actorStaffId], references: [id], onDelete: Restrict)
+
+  @@unique([actorStaffId, idempotencyKey])
+}
+
+model PharmacyStockLot {
+  id                String                 @id @default(uuid()) @db.Uuid
+  medicineId        String                 @db.Uuid
+  batchNumber       String                 @db.VarChar(100)
+  expiryDate        DateTime               @db.Date
+  receivedQuantity  Decimal                @db.Decimal(12, 2)
+  quantityUnit      String                 @db.VarChar(50)
+  supplierName      String?                @db.VarChar(200)
+  reference         String?                @db.VarChar(100)
+  medicineName      String?                @db.VarChar(200)
+  strength          String?                @db.VarChar(100)
+  dosageForm        String?                @db.VarChar(100)
+  receivedByStaffId String                 @db.Uuid
+  idempotencyKey    String                 @db.Uuid
+  requestHash       String                 @db.VarChar(64)
+  receivedAt        DateTime               @default(now()) @db.Timestamptz(3)
+  medicine          Medicine               @relation(fields: [medicineId], references: [id], onDelete: Restrict)
+  receivedBy        StaffUser              @relation("PharmacyStockReceiver", fields: [receivedByStaffId], references: [id], onDelete: Restrict)
+  dispenseItems     PharmacyDispenseItem[]
+
+  @@unique([receivedByStaffId, idempotencyKey])
+  @@index([medicineId, expiryDate])
+  @@index([receivedAt, id])
+}
+
+model PharmacyDispense {
+  id                 String                 @id @default(uuid()) @db.Uuid
+  prescriptionId     String                 @db.Uuid
+  dispensedByStaffId String                 @db.Uuid
+  idempotencyKey     String                 @db.Uuid
+  requestHash        String                 @db.VarChar(64)
+  patientName        String                 @db.VarChar(100)
+  patientMrn         String                 @db.VarChar(30)
+  notes              String?                @db.VarChar(1000)
+  dispensedAt        DateTime               @default(now()) @db.Timestamptz(3)
+  prescription       Prescription           @relation(fields: [prescriptionId], references: [id], onDelete: Restrict)
+  dispensedBy        StaffUser              @relation("PharmacyDispenser", fields: [dispensedByStaffId], references: [id], onDelete: Restrict)
+  items              PharmacyDispenseItem[]
+
+  @@unique([dispensedByStaffId, idempotencyKey])
+  @@index([prescriptionId, dispensedAt])
+  @@index([dispensedAt, id])
+}
+
+model PharmacyDispenseItem {
+  billingLines       BillingInvoiceLine[]
+  id                 String               @id @default(uuid()) @db.Uuid
+  dispenseId         String               @db.Uuid
+  prescriptionItemId String               @db.Uuid
+  stockLotId         String               @db.Uuid
+  quantity           Decimal              @db.Decimal(12, 2)
+  quantityUnit       String               @db.VarChar(50)
+  medicineName       String               @db.VarChar(200)
+  strength           String               @db.VarChar(100)
+  dosageForm         String               @db.VarChar(100)
+  batchNumber        String               @db.VarChar(100)
+  expiryDate         DateTime             @db.Date
+  dispense           PharmacyDispense     @relation(fields: [dispenseId], references: [id], onDelete: Restrict)
+  prescriptionItem   PrescriptionItem     @relation(fields: [prescriptionItemId], references: [id], onDelete: Restrict)
+  stockLot           PharmacyStockLot     @relation(fields: [stockLotId], references: [id], onDelete: Restrict)
+
+  @@unique([dispenseId, prescriptionItemId, stockLotId])
+  @@index([prescriptionItemId])
+  @@index([stockLotId])
+}
+
+enum BillingKind {
+  CONSULTATION
+  LAB
+  MEDICINE
+}
+
+enum BillingInvoiceStatus {
+  DRAFT
+  ISSUED
+  CANCELLED
+}
+
+enum BillingPaymentMethod {
+  CASH
+  UPI
+  CARD
+}
+
+model BillingPrice {
+  lines           BillingInvoiceLine[]
+  id              String               @id @default(uuid()) @db.Uuid
+  catalogueKey    String               @unique @db.VarChar(150)
+  kind            BillingKind
+  doctorId        String?              @db.Uuid
+  labTestId       String?              @db.Uuid
+  medicineId      String?              @db.Uuid
+  displayName     String               @db.VarChar(500)
+  quantityUnit    String               @db.VarChar(50)
+  unitPriceMinor  BigInt
+  isActive        Boolean              @default(true)
+  version         Int                  @default(1)
+  editedByStaffId String               @db.Uuid
+  createdAt       DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime             @updatedAt @db.Timestamptz(3)
+  doctor          DoctorProfile?       @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+  labTest         LabTest?             @relation(fields: [labTestId], references: [id], onDelete: Restrict)
+  medicine        Medicine?            @relation(fields: [medicineId], references: [id], onDelete: Restrict)
+  editedBy        StaffUser            @relation("BillingPriceEditor", fields: [editedByStaffId], references: [id], onDelete: Restrict)
+
+  @@index([kind, isActive, displayName])
+}
+
+model BillingInvoice {
+  id                 String               @id @default(uuid()) @db.Uuid
+  patientId          String               @db.Uuid
+  patientName        String               @db.VarChar(100)
+  patientMrn         String               @db.VarChar(30)
+  invoiceNumber      String?              @unique @db.VarChar(40)
+  status             BillingInvoiceStatus @default(DRAFT)
+  currency           String               @default("INR") @db.Char(3)
+  totalMinor         BigInt
+  version            Int                  @default(1)
+  notes              String?              @db.VarChar(1000)
+  cancellationReason String?              @db.VarChar(1000)
+  createdByStaffId   String               @db.Uuid
+  issuedByStaffId    String?              @db.Uuid
+  cancelledByStaffId String?              @db.Uuid
+  createdAt          DateTime             @default(now()) @db.Timestamptz(3)
+  issuedAt           DateTime?            @db.Timestamptz(3)
+  cancelledAt        DateTime?            @db.Timestamptz(3)
+  patient            Patient              @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  createdBy          StaffUser            @relation("BillingCreator", fields: [createdByStaffId], references: [id], onDelete: Restrict)
+  issuedBy           StaffUser?           @relation("BillingIssuer", fields: [issuedByStaffId], references: [id], onDelete: Restrict)
+  cancelledBy        StaffUser?           @relation("BillingCanceller", fields: [cancelledByStaffId], references: [id], onDelete: Restrict)
+  lines              BillingInvoiceLine[]
+  payments           BillingPayment[]
+
+  @@index([patientId, createdAt])
+  @@index([status, createdAt])
+}
+
+model BillingInvoiceLine {
+  price          BillingPrice          @relation(fields: [priceId], references: [id], onDelete: Restrict)
+  id             String                @id @default(uuid()) @db.Uuid
+  invoiceId      String                @db.Uuid
+  position       Int
+  kind           BillingKind
+  sourceKey      String                @db.VarChar(100)
+  reservedKey    String?               @unique @db.VarChar(100)
+  appointmentId  String?               @db.Uuid
+  labOrderItemId String?               @db.Uuid
+  dispenseItemId String?               @db.Uuid
+  description    String                @db.VarChar(500)
+  quantity       String                @db.VarChar(40)
+  quantityUnit   String                @db.VarChar(50)
+  unitPriceMinor BigInt
+  amountMinor    BigInt
+  priceId        String                @db.Uuid
+  priceVersion   Int
+  invoice        BillingInvoice        @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  appointment    Appointment?          @relation(fields: [appointmentId], references: [id], onDelete: Restrict)
+  labOrderItem   LabOrderItem?         @relation(fields: [labOrderItemId], references: [id], onDelete: Restrict)
+  dispenseItem   PharmacyDispenseItem? @relation(fields: [dispenseItemId], references: [id], onDelete: Restrict)
+
+  @@unique([invoiceId, position])
+  @@index([appointmentId])
+  @@index([labOrderItemId])
+  @@index([dispenseItemId])
+}
+
+model BillingPayment {
+  id                String               @id @default(uuid()) @db.Uuid
+  invoiceId         String               @db.Uuid
+  receiptNumber     String               @unique @db.VarChar(40)
+  method            BillingPaymentMethod
+  amountMinor       BigInt
+  externalReference String?              @db.VarChar(100)
+  referenceKey      String?              @unique @db.VarChar(110)
+  notes             String?              @db.VarChar(1000)
+  recordedByStaffId String               @db.Uuid
+  recordedAt        DateTime             @default(now()) @db.Timestamptz(3)
+  invoice           BillingInvoice       @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  recordedBy        StaffUser            @relation("BillingPaymentReceiver", fields: [recordedByStaffId], references: [id], onDelete: Restrict)
+
+  @@index([invoiceId, recordedAt])
+}
+
+model BillingCounter {
+  key   String @id @db.VarChar(40)
+  value Int
+}
+
+model BillingRequest {
+  id           String    @id @default(uuid()) @db.Uuid
+  actorStaffId String    @db.Uuid
+  key          String    @db.Uuid
+  requestHash  String    @db.VarChar(64)
+  response     Json
+  createdAt    DateTime  @default(now()) @db.Timestamptz(3)
+  actor        StaffUser @relation(fields: [actorStaffId], references: [id], onDelete: Restrict)
+
+  @@unique([actorStaffId, key])
 }

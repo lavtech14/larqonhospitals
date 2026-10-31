@@ -6,7 +6,7 @@ export default function PatientPortalFrame({
   actions,
   children,
 }: {
-  current: "home" | "appointments";
+  current: "home" | "appointments" | "visits";
   actions?: ReactNode;
   children: ReactNode;
 }) {
@@ -40,7 +40,7 @@ export default function PatientPortalFrame({
           <div className="flex flex-wrap items-center gap-3">
             <nav
               aria-label="Patient portal navigation"
-              className="flex gap-1 rounded-xl bg-slate-100 p-1"
+              className="flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1"
             >
               {[
                 { href: "/patient", label: "Home", value: "home" },
@@ -48,6 +48,11 @@ export default function PatientPortalFrame({
                   href: "/patient/appointments",
                   label: "Appointments",
                   value: "appointments",
+                },
+                {
+                  href: "/patient/visits",
+                  label: "My visits",
+                  value: "visits",
                 },
               ].map((item) => (
                 <Link

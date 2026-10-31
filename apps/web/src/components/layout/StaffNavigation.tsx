@@ -12,7 +12,43 @@ const links: {
   icon: WorkspaceIconName;
   permissions: string[];
 }[] = [
-  { href: "/", label: "Overview", icon: "overview", permissions: [] },
+  { href: "/dashboard", label: "Overview", icon: "overview", permissions: [] },
+  {
+    href: "/billing",
+    label: "Billing and payments",
+    icon: "departments",
+    permissions: ["billing.read"],
+  },
+  {
+    href: "/billing/prices",
+    label: "Service prices",
+    icon: "departments",
+    permissions: ["billing.prices.manage"],
+  },
+  {
+    href: "/pharmacy",
+    label: "Pharmacy dispensing",
+    icon: "departments",
+    permissions: ["pharmacy.prescriptions.read"],
+  },
+  {
+    href: "/pharmacy/stock",
+    label: "Pharmacy stock",
+    icon: "departments",
+    permissions: ["pharmacy.stock.read"],
+  },
+  {
+    href: "/staff",
+    label: "Staff accounts",
+    icon: "staff",
+    permissions: ["staff.read"],
+  },
+  {
+    href: "/doctors",
+    label: "Doctors",
+    icon: "doctors",
+    permissions: ["doctors.read"],
+  },
   {
     href: "/appointments",
     label: "Appointments",
@@ -26,17 +62,18 @@ const links: {
     permissions: ["appointments.own.read"],
   },
   {
+    href: "/nursing",
+    label: "Nursing queue",
+    icon: "patients",
+    permissions: ["nursing.queue.read"],
+  },
+  {
     href: "/patients",
     label: "Patients",
     icon: "patients",
     permissions: ["patients.demographics.read"],
   },
-  {
-    href: "/doctors",
-    label: "Doctors",
-    icon: "doctors",
-    permissions: ["doctors.read"],
-  },
+
   {
     href: "/departments",
     label: "Departments",
@@ -44,10 +81,34 @@ const links: {
     permissions: ["departments.read"],
   },
   {
-    href: "/staff",
-    label: "Staff accounts",
-    icon: "staff",
-    permissions: ["staff.read"],
+    href: "/medicines",
+    label: "Medicines",
+    icon: "departments",
+    permissions: ["medicines.read", "medicines.manage"],
+  },
+  {
+    href: "/lab-tests",
+    label: "Lab tests",
+    icon: "departments",
+    permissions: ["lab-tests.read"],
+  },
+  {
+    href: "/lab",
+    label: "Sample collection",
+    icon: "departments",
+    permissions: ["lab.queue.read"],
+  },
+  {
+    href: "/lab-results",
+    label: "Lab results",
+    icon: "departments",
+    permissions: ["lab.results.read"],
+  },
+  {
+    href: "/lab-specimens",
+    label: "Reject a sample",
+    icon: "departments",
+    permissions: ["lab.queue.read", "lab.samples.reject"],
   },
 ];
 
@@ -69,9 +130,7 @@ export default function StaffNavigation({
         )
         .map((link) => {
           const active =
-            link.href === "/"
-              ? pathname === "/"
-              : pathname === link.href || pathname.startsWith(`${link.href}/`);
+            pathname === link.href || pathname.startsWith(`${link.href}/`);
           return (
             <Link
               key={link.href}

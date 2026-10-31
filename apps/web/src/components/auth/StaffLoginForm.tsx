@@ -62,7 +62,7 @@ export default function StaffLoginForm() {
           setMode("change-password");
           setMessage("Change your initial password before continuing.");
         } else {
-          router.replace("/");
+          router.replace("/dashboard");
         }
       } else {
         await apiRequest<{ message: string }>("/auth/change-password", {

@@ -3,6 +3,11 @@
 import { useState } from "react";
 
 import { useStaffUser } from "@/components/auth/StaffSessionGate";
+import CheckInButton from "@/components/appointments/CheckInButton";
+import type {
+  CheckInResponse,
+  EncounterSummary,
+} from "@/components/appointments/CheckInButton";
 import { ApiError, apiRequest } from "@/lib/api";
 import Link from "next/link";
 
@@ -13,10 +18,12 @@ interface Appointment {
   endsAt: string;
   status: "BOOKED" | "CANCELLED";
   consultationEndedAt: string | null;
+  encounter?: EncounterSummary | null;
   version: number;
   patient: {
     id: string;
     fullName: string;
+    mrn?: string;
   };
   doctor: {
     id: string;
@@ -91,6 +98,11 @@ export default function AppointmentWorkspace({
 
   const canCancel =
     !ownView && (user.permissions?.includes("appointments.cancel") ?? false);
+  const canCheckIn =
+    !ownView &&
+    ["encounters.check-in", "appointments.read"].every((permission) =>
+      user.permissions?.includes(permission),
+    );
 
   const [filters, setFilters] = useState<Filters>({
     from: "",
@@ -104,11 +116,12 @@ export default function AppointmentWorkspace({
   const [loading, setLoading] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [checkingIn, setCheckingIn] = useState(false);
 
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
-  const busy = loading || cancelling;
+  const busy = loading || cancelling || checkingIn;
 
   async function load(selected: Filters, page = 1): Promise<boolean> {
     setLoading(true);
@@ -198,6 +211,34 @@ export default function AppointmentWorkspace({
       "availability.read",
     ].every((permission) => user.permissions?.includes(permission));
 
+  function handleCheckedIn(response: CheckInResponse) {
+    setConfirmingId(null);
+    setError("");
+
+    setResult((current) =>
+      current
+        ? {
+            ...current,
+            items: current.items.map((appointment) =>
+              appointment.id === response.appointment.id
+                ? {
+                    ...appointment,
+                    version: response.appointment.version,
+                    encounter: response.encounter,
+                  }
+                : appointment,
+            ),
+          }
+        : current,
+    );
+
+    setNotice(
+      response.alreadyCheckedIn
+        ? "This patient already has a visit record. Its current status is shown."
+        : "Patient checked in and added to the nursing queue.",
+    );
+  }
+
   function renderStatus(appointment: Appointment) {
     return (
       <div className="space-y-2">
@@ -210,6 +251,20 @@ export default function AppointmentWorkspace({
           />
           {appointment.status === "BOOKED" ? "Booked" : "Cancelled"}
         </span>
+        {appointment.encounter && (
+          <p className="text-xs font-semibold text-teal-800">
+            Visit:{" "}
+            {
+              {
+                CHECKED_IN: "Checked in",
+                READY_FOR_DOCTOR: "Ready for doctor",
+                IN_PROGRESS: "In consultation",
+                COMPLETED: "Completed",
+                CANCELLED: "Cancelled",
+              }[appointment.encounter.status]
+            }
+          </p>
+        )}
         {appointment.consultationEndedAt && (
           <div>
             <p className="text-xs font-semibold text-teal-800">
@@ -236,7 +291,29 @@ export default function AppointmentWorkspace({
     );
   }
 
-  function renderActions(appointment: Appointment) {
+  function renderExistingActions(appointment: Appointment) {
+    if (
+      ownView &&
+      appointment.mode === "IN_PERSON" &&
+      appointment.status === "BOOKED" &&
+      user.permissions?.includes("encounters.own.read")
+    ) {
+      return (
+        <Link
+          href={`/my-appointments/${appointment.id}/encounter`}
+          className={primaryButton}
+        >
+          Open encounter
+        </Link>
+      );
+    }
+    if (!ownView && appointment.encounter) {
+      return (
+        <span className="text-xs leading-5 text-slate-500">
+          Visit recorded. Booking cancellation is unavailable.
+        </span>
+      );
+    }
     if (
       ownView &&
       appointment.mode === "ONLINE" &&
@@ -312,6 +389,24 @@ export default function AppointmentWorkspace({
             ? "Booking cancelled"
             : "No actions available"}
       </span>
+    );
+  }
+
+  function renderActions(appointment: Appointment) {
+    return (
+      <div className="flex flex-wrap items-start gap-2">
+        {canCheckIn && (
+          <CheckInButton
+            key={appointment.id}
+            appointment={appointment}
+            disabled={busy}
+            onBusyChange={setCheckingIn}
+            onCheckedIn={handleCheckedIn}
+          />
+        )}
+
+        {renderExistingActions(appointment)}
+      </div>
     );
   }
 
