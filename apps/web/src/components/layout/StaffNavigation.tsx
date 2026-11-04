@@ -110,6 +110,12 @@ const links: {
     icon: "departments",
     permissions: ["lab.queue.read", "lab.samples.reject"],
   },
+  {
+    href: "/rpm",
+    label: "Home monitoring",
+    icon: "patients",
+    permissions: ["rpm.read"],
+  },
 ];
 
 export default function StaffNavigation({

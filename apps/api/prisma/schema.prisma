@@ -41,9 +41,11 @@ model Patient {
   guardianRelationship String? @db.VarChar(50)
   guardianPhone        String? @db.VarChar(20)
 
-  emergencyContactName         String? @db.VarChar(100)
-  emergencyContactRelationship String? @db.VarChar(50)
-  emergencyContactPhone        String? @db.VarChar(20)
+  emergencyContactName         String?         @db.VarChar(100)
+  emergencyContactRelationship String?         @db.VarChar(50)
+  emergencyContactPhone        String?         @db.VarChar(20)
+  rpmEnrollments               RpmEnrollment[]
+  rpmAssignments               RpmAssignment[]
 
   @@index([fullName])
   @@index([phone])
@@ -108,6 +110,13 @@ model StaffUser {
   labSampleRejections     LabSampleRejection[]         @relation("LabSampleRejector")
   cancelledLabOrders      LabOrder[]                   @relation("LabOrderCanceller")
   labOrderCancellations   LabOrderCancellation[]       @relation("LabOrderCancellationActor")
+  createdRpmEnrollments   RpmEnrollment[]              @relation("RpmEnrollmentCreator")
+  rpmTeamMemberships      RpmCareTeamMember[]
+  approvedRpmPlans        RpmPlanVersion[]             @relation("RpmPlanApprover")
+  rpmReviews              RpmReview[]
+  rpmObservationReviews   RpmObservationReview[]
+  assignedHomeMonitoring  RpmAssignment[]              @relation("RpmAssignmentAuthor")
+  nursingHomeMonitoring   RpmAssignment[]              @relation("RpmAssignmentNurse")
 }
 
 model StaffUserRole {
@@ -205,11 +214,13 @@ model DoctorProfile {
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
-  department   Department          @relation(fields: [departmentId], references: [id], onDelete: Restrict)
-  staffUser    StaffUser?          @relation(fields: [staffUserId], references: [id], onDelete: Restrict)
-  availability DoctorAvailability?
-  dateClosures DoctorDateClosure[]
-  appointments Appointment[]
+  department     Department          @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  staffUser      StaffUser?          @relation(fields: [staffUserId], references: [id], onDelete: Restrict)
+  availability   DoctorAvailability?
+  dateClosures   DoctorDateClosure[]
+  appointments   Appointment[]
+  rpmEnrollments RpmEnrollment[]
+  rpmAssignments RpmAssignment[]
 
   @@index([departmentId, isActive])
 }
@@ -339,9 +350,11 @@ model PatientAccount {
   createdAt          DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt          DateTime  @updatedAt @db.Timestamptz(3)
 
-  patient   Patient          @relation(fields: [patientId], references: [id], onDelete: Restrict)
-  createdBy StaffUser        @relation(fields: [createdByStaffId], references: [id], onDelete: Restrict)
-  sessions  PatientSession[]
+  patient                Patient          @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  createdBy              StaffUser        @relation(fields: [createdByStaffId], references: [id], onDelete: Restrict)
+  sessions               PatientSession[]
+  rpmSubmissions         RpmSubmission[]
+  homeMonitoringReadings RpmReading[]
 }
 
 model PatientSession {
@@ -1062,4 +1075,439 @@ model BillingRequest {
   actor        StaffUser @relation(fields: [actorStaffId], references: [id], onDelete: Restrict)
 
   @@unique([actorStaffId, key])
+}
+
+enum RpmEnrollmentStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+enum RpmMetric {
+  WEIGHT
+  TEMPERATURE
+  SYSTOLIC_BP
+  DIASTOLIC_BP
+  SPO2
+  BLOOD_GLUCOSE
+  PULSE
+}
+
+enum RpmReadingContext {
+  GENERAL
+  FASTING
+  BEFORE_MEAL
+  AFTER_MEAL
+  RANDOM
+}
+
+enum RpmUnit {
+  KG
+  CELSIUS
+  MMHG
+  PERCENT
+  MG_DL
+  BPM
+}
+
+enum RpmRuleDirection {
+  LOW
+  HIGH
+}
+
+enum RpmAlertSeverity {
+  WARNING
+  URGENT
+}
+
+model RpmEnrollment {
+  id String @id @default(uuid()) @db.Uuid
+
+  patientId        String @db.Uuid
+  doctorId         String @db.Uuid
+  createdByStaffId String @db.Uuid
+
+  status RpmEnrollmentStatus @default(DRAFT)
+
+  reason String @db.VarChar(2000)
+
+  startsAt DateTime  @db.Timestamptz(3)
+  endsAt   DateTime? @db.Timestamptz(3)
+
+  // Record patient agreement during activation.
+  patientAgreedAt DateTime? @db.Timestamptz(3)
+
+  statusReason String? @db.VarChar(1000)
+
+  version   Int      @default(1)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+
+  doctor DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+
+  createdBy StaffUser @relation("RpmEnrollmentCreator", fields: [createdByStaffId], references: [id], onDelete: Restrict)
+
+  careTeam    RpmCareTeamMember[]
+  plans       RpmPlanVersion[]
+  submissions RpmSubmission[]
+
+  @@index([patientId, status])
+  @@index([doctorId, status])
+}
+
+model RpmCareTeamMember {
+  id String @id @default(uuid()) @db.Uuid
+
+  enrollmentId String @db.Uuid
+  staffUserId  String @db.Uuid
+
+  assignedAt DateTime  @default(now()) @db.Timestamptz(3)
+  removedAt  DateTime? @db.Timestamptz(3)
+
+  enrollment RpmEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
+
+  staffUser StaffUser @relation(fields: [staffUserId], references: [id], onDelete: Restrict)
+
+  @@index([enrollmentId, removedAt])
+  @@index([staffUserId, removedAt])
+}
+
+model RpmPlanVersion {
+  id String @id @default(uuid()) @db.Uuid
+
+  enrollmentId      String @db.Uuid
+  approvedByStaffId String @db.Uuid
+
+  revision Int
+
+  effectiveFrom DateTime @db.Timestamptz(3)
+  reviewDueAt   DateTime @db.Timestamptz(3)
+
+  timeZone String @default("Asia/Kolkata") @db.VarChar(50)
+
+  patientInstructions String @db.VarChar(5000)
+
+  // Display when readings are monitored.
+  monitoringHours String @db.VarChar(1000)
+
+  // Hospital-approved contact and escalation instructions.
+  contactInstructions   String @db.VarChar(2000)
+  emergencyInstructions String @db.VarChar(2000)
+
+  approvedAt DateTime @default(now()) @db.Timestamptz(3)
+
+  idempotencyKey String @db.Uuid
+  requestHash    String @db.VarChar(64)
+
+  enrollment RpmEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
+
+  approvedBy StaffUser @relation("RpmPlanApprover", fields: [approvedByStaffId], references: [id], onDelete: Restrict)
+
+  parameters  RpmPlanParameter[]
+  submissions RpmSubmission[]
+
+  @@unique([enrollmentId, revision])
+  @@unique([approvedByStaffId, idempotencyKey])
+  @@index([enrollmentId, effectiveFrom])
+}
+
+model RpmPlanParameter {
+  id String @id @default(uuid()) @db.Uuid
+
+  planVersionId String @db.Uuid
+
+  metric  RpmMetric
+  context RpmReadingContext @default(GENERAL)
+  unit    RpmUnit
+
+  // Example: one reading in each daily interval.
+  // These values are selected by the clinician.
+  intervalDays        Int
+  readingsPerInterval Int
+
+  instructions String? @db.VarChar(2000)
+
+  planVersion RpmPlanVersion @relation(fields: [planVersionId], references: [id], onDelete: Restrict)
+
+  rules        RpmThresholdRule[]
+  observations RpmObservation[]
+
+  @@unique([planVersionId, metric, context])
+}
+
+model RpmThresholdRule {
+  id String @id @default(uuid()) @db.Uuid
+
+  parameterId String @db.Uuid
+
+  direction RpmRuleDirection
+  severity  RpmAlertSeverity
+
+  // LOW: value below boundary triggers the rule.
+  // HIGH: value above boundary triggers the rule.
+  boundary  Decimal @db.Decimal(10, 3)
+  inclusive Boolean @default(false)
+
+  patientMessage String @db.VarChar(2000)
+
+  parameter RpmPlanParameter @relation(fields: [parameterId], references: [id], onDelete: Restrict)
+  alerts    RpmAlert[]
+
+  @@unique([parameterId, direction, severity])
+}
+
+enum RpmAssessment {
+  WITHIN_CONFIGURED_RANGE
+  LOW
+  HIGH
+  URGENT
+  NOT_ASSESSED
+}
+
+enum RpmAlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+enum RpmReviewAction {
+  NOTE
+  ACKNOWLEDGE
+  RESOLVE
+}
+
+enum RpmResolutionOutcome {
+  CLINICAL_ACTION_RECORDED
+  INVALID_READING
+  NO_FURTHER_ACTION
+}
+
+model RpmSubmission {
+  id String @id @default(uuid()) @db.Uuid
+
+  enrollmentId     String @db.Uuid
+  planVersionId    String @db.Uuid
+  patientAccountId String @db.Uuid
+
+  // Actual measurement time and server receipt time.
+  measuredAt  DateTime @db.Timestamptz(3)
+  submittedAt DateTime @default(now()) @db.Timestamptz(3)
+
+  symptoms String? @db.VarChar(2000)
+  notes    String? @db.VarChar(2000)
+
+  // Snapshot the patient-facing plan instructions used at submission.
+  planSnapshot Json
+
+  idempotencyKey String @db.Uuid
+  requestHash    String @db.VarChar(64)
+
+  // Corrections create another submission; originals are retained.
+  replacesSubmissionId String? @unique @db.Uuid
+  correctionReason     String? @db.VarChar(1000)
+
+  enrollment     RpmEnrollment  @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
+  planVersion    RpmPlanVersion @relation(fields: [planVersionId], references: [id], onDelete: Restrict)
+  patientAccount PatientAccount @relation(fields: [patientAccountId], references: [id], onDelete: Restrict)
+
+  replacesSubmission   RpmSubmission? @relation("RpmSubmissionCorrection", fields: [replacesSubmissionId], references: [id], onDelete: Restrict)
+  replacedBySubmission RpmSubmission? @relation("RpmSubmissionCorrection")
+
+  observations RpmObservation[]
+
+  @@unique([patientAccountId, idempotencyKey])
+  @@index([enrollmentId, measuredAt, id])
+  @@index([patientAccountId, submittedAt])
+  @@index([planVersionId])
+}
+
+model RpmObservation {
+  id String @id @default(uuid()) @db.Uuid
+
+  submissionId    String @db.Uuid
+  planParameterId String @db.Uuid
+
+  metric  RpmMetric
+  context RpmReadingContext
+  unit    RpmUnit
+
+  value Decimal @db.Decimal(10, 3)
+
+  // Optional context supplied with the measurement.
+  measurementMethod String? @db.VarChar(100)
+  deviceDescription String? @db.VarChar(200)
+
+  // Relevant to SpO2; null means not reported.
+  supplementalOxygen Boolean?
+
+  // Relevant to pulse; null means not reported.
+  resting Boolean?
+
+  // Relevant to AFTER_MEAL blood glucose.
+  minutesAfterMeal Int?
+
+  assessment RpmAssessment @default(NOT_ASSESSED)
+
+  // Preserve the exact rules evaluated, including an empty rule set.
+  evaluatedRulesSnapshot Json
+
+  submission    RpmSubmission    @relation(fields: [submissionId], references: [id], onDelete: Restrict)
+  planParameter RpmPlanParameter @relation(fields: [planParameterId], references: [id], onDelete: Restrict)
+
+  alerts         RpmAlert[]
+  clinicalReview RpmObservationReview?
+
+  @@unique([submissionId, metric, context])
+  @@index([planParameterId])
+}
+
+model RpmAlert {
+  id String @id @default(uuid()) @db.Uuid
+
+  observationId   String @db.Uuid
+  thresholdRuleId String @db.Uuid
+
+  severity  RpmAlertSeverity
+  direction RpmRuleDirection
+
+  // Snapshot the triggering rule.
+  boundary       Decimal @db.Decimal(10, 3)
+  inclusive      Boolean
+  patientMessage String  @db.VarChar(2000)
+
+  status  RpmAlertStatus @default(OPEN)
+  version Int            @default(1)
+
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+  acknowledgedAt DateTime? @db.Timestamptz(3)
+  resolvedAt     DateTime? @db.Timestamptz(3)
+
+  observation   RpmObservation   @relation(fields: [observationId], references: [id], onDelete: Restrict)
+  thresholdRule RpmThresholdRule @relation(fields: [thresholdRuleId], references: [id], onDelete: Restrict)
+
+  reviews RpmReview[]
+
+  @@unique([observationId, thresholdRuleId])
+  @@index([status, severity, createdAt])
+}
+
+model RpmReview {
+  id String @id @default(uuid()) @db.Uuid
+
+  alertId      String @db.Uuid
+  actorStaffId String @db.Uuid
+
+  action            RpmReviewAction
+  resolutionOutcome RpmResolutionOutcome?
+
+  // Internal clinical-team documentation.
+  internalNote String @db.VarChar(5000)
+
+  // Only this field is eligible for patient-facing feedback.
+  patientFeedback String? @db.VarChar(2000)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  idempotencyKey String @db.Uuid
+  requestHash    String @db.VarChar(64)
+
+  alert RpmAlert  @relation(fields: [alertId], references: [id], onDelete: Restrict)
+  actor StaffUser @relation(fields: [actorStaffId], references: [id], onDelete: Restrict)
+
+  @@unique([actorStaffId, idempotencyKey])
+  @@index([alertId, createdAt])
+}
+
+model RpmObservationReview {
+  id String @id @default(uuid()) @db.Uuid
+
+  observationId String @unique @db.Uuid
+  actorStaffId  String @db.Uuid
+
+  internalNote String   @db.VarChar(5000)
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+
+  idempotencyKey String @db.Uuid
+  requestHash    String @db.VarChar(64)
+
+  observation RpmObservation @relation(fields: [observationId], references: [id], onDelete: Restrict)
+  actor       StaffUser      @relation(fields: [actorStaffId], references: [id], onDelete: Restrict)
+
+  @@unique([actorStaffId, idempotencyKey])
+  @@index([actorStaffId, createdAt])
+}
+
+model RpmAssignment {
+  id String @id @default(uuid()) @db.Uuid
+
+  patientId         String @db.Uuid
+  doctorId          String @db.Uuid
+  nurseStaffId      String @db.Uuid
+  assignedByStaffId String @db.Uuid
+
+  // Calendar dates interpreted in the hospital timezone.
+  // The end date is inclusive.
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+
+  reason String  @db.VarChar(2000)
+  notes  String? @db.VarChar(2000)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  // Retain assignments if monitoring is stopped early.
+  cancelledAt        DateTime? @db.Timestamptz(3)
+  cancellationReason String?   @db.VarChar(1000)
+
+  idempotencyKey String @db.Uuid
+  requestHash    String @db.VarChar(64)
+
+  patient Patient       @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  doctor  DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Restrict)
+
+  nurse      StaffUser @relation("RpmAssignmentNurse", fields: [nurseStaffId], references: [id], onDelete: Restrict)
+  assignedBy StaffUser @relation("RpmAssignmentAuthor", fields: [assignedByStaffId], references: [id], onDelete: Restrict)
+
+  readings RpmReading[]
+
+  @@unique([assignedByStaffId, idempotencyKey])
+  @@index([patientId, startDate, endDate])
+  @@index([doctorId, startDate])
+  @@index([nurseStaffId, startDate])
+}
+
+model RpmReading {
+  id String @id @default(uuid()) @db.Uuid
+
+  assignmentId     String @db.Uuid
+  patientAccountId String @db.Uuid
+
+  // Time entered by the patient and time received by the server.
+  measuredAt  DateTime @db.Timestamptz(3)
+  submittedAt DateTime @default(now()) @db.Timestamptz(3)
+
+  weightKg         Decimal? @db.Decimal(7, 3)
+  temperatureC     Decimal? @db.Decimal(6, 3)
+  systolicBp       Int?
+  diastolicBp      Int?
+  spo2Percent      Decimal? @db.Decimal(6, 3)
+  pulseBpm         Int?
+  bloodGlucoseMgDl Decimal? @db.Decimal(8, 3)
+
+  // Reuse the existing context enum; no plan is required.
+  glucoseContext RpmReadingContext?
+
+  notes String? @db.VarChar(2000)
+
+  idempotencyKey String @db.Uuid
+  requestHash    String @db.VarChar(64)
+
+  assignment     RpmAssignment  @relation(fields: [assignmentId], references: [id], onDelete: Restrict)
+  patientAccount PatientAccount @relation(fields: [patientAccountId], references: [id], onDelete: Restrict)
+
+  @@unique([patientAccountId, idempotencyKey])
+  @@index([assignmentId, measuredAt, id])
 }

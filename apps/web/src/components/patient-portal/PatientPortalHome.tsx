@@ -6,6 +6,7 @@ import Link from "next/link";
 import PatientPortalFrame from "./PatientPortalFrame";
 
 import { ApiError } from "@/lib/api";
+import PatientRpmAssignedBanner from "@/components/rpm/PatientRpmAssignedBanner";
 import {
   patientApiRequest,
   type PatientAuthResponse,
@@ -55,7 +56,15 @@ export default function PatientPortalHome() {
       } catch (error) {
         if (!active) return;
 
-        if (error instanceof ApiError && error.status === 401) {
+        const passwordChangeRequired =
+          error instanceof ApiError &&
+          error.status === 403 &&
+          error.message === "Change your temporary password before continuing.";
+
+        if (
+          error instanceof ApiError &&
+          (error.status === 401 || passwordChangeRequired)
+        ) {
           setSession({ status: "loading" });
           router.replace("/patient/login");
         } else {
@@ -205,22 +214,34 @@ export default function PatientPortalHome() {
           >
             Welcome, {session.user.fullName}
           </h1>
+
           <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300">
-            Review appointments linked to your hospital record and open your
-            scheduled online consultations.
+            View your appointments, join scheduled online consultations, and
+            submit home readings when enrolled in remote monitoring.
           </p>
-          <Link
-            href="/patient/appointments"
-            className="mt-6 inline-flex min-h-12 items-center justify-center gap-3 rounded-xl bg-white px-5 text-sm font-semibold text-slate-950 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-          >
-            My appointments <span aria-hidden="true">→</span>
-          </Link>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href="/patient/appointments"
+              className="inline-flex min-h-12 items-center justify-center gap-3 rounded-xl bg-white px-5 text-sm font-semibold text-slate-950 hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            >
+              My appointments <span aria-hidden="true">→</span>
+            </Link>
+
+            <Link
+              href="/patient/monitoring"
+              className="inline-flex min-h-12 items-center justify-center gap-3 rounded-xl border border-white/30 bg-white/10 px-5 text-sm font-semibold text-white hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            >
+              Home monitoring <span aria-hidden="true">→</span>
+            </Link>
+          </div>
         </div>
       </section>
       <section
         aria-labelledby="account-title"
         className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6"
       >
+        <PatientRpmAssignedBanner />
         <h2
           id="account-title"
           className="text-lg font-semibold tracking-tight text-slate-950"
